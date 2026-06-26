@@ -1,3 +1,4 @@
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class Game
@@ -26,27 +27,24 @@ public class Game
     public Player OtherPlayer { get; private set; }
     public BoardPlane Board { get; }
     public GameRules Rules { get; }
+    public MoveSim MoveSim { get; }
 
 
-    public Game(BoardPlane board, Player.Color color)
+    public Game(BoardPlane board)
     {
-        Board = board;
-
-        //Player whitePlayer = new Player(PlayerColor.White);
-        //Player blackPlayer = new Player(PlayerColor.Black);
-
-        //CurrentPlayer = whitePlayer;
-        //OtherPlayer = blackPlayer;
-
         CurrentState = GameState.Initializing;
-        InitGame(color);
+        this.Board = board;
+        MoveSim = new MoveSim();
         Rules = new GameRules(this);
+    }
+
+    public void StartGame(Player.Color color)
+    {
+        InitGame(color);
         InitializePieces(CurrentPlayer, Board, Rules);
         InitializePieces(OtherPlayer, Board, Rules);
         EnableUnits();
     }
-
-
     private void InitGame(Player.Color color)
     {
         PlayerManager playerManager = new(color);
@@ -80,7 +78,6 @@ public class Game
 
     public void TryMove(GameObject obj, BoardSquare moveToTile)
     {
-        GameObject king = CurrentPlayer.PlayersKing.GetObj();
         //if obj is not one of CurrentPlayer's units and it's not their king, bad obj.
         if (!CurrentPlayer.Units.Contains(obj))
         {
@@ -88,7 +85,7 @@ public class Game
         }
         if (obj.TryGetComponent<IGamePiece>(out IGamePiece piece))
         {
-            if (piece.ValidateMove(moveToTile) && Rules.ValidMove(piece, moveToTile))
+            if (Rules.ValidMove(piece, moveToTile) && piece.ValidateMove(moveToTile))
             {
                 int tileNum = moveToTile.SquareNumber;
                 if (Board.GetOccupier(tileNum) != null)
@@ -98,6 +95,14 @@ public class Game
                 Board.MovePiece(piece, tileNum);
                 //should make class for moving visual GameObjects
                 obj.transform.position = moveToTile.transform.position;
+
+                if (piece is King king)
+                    king.FirstMove = false;
+                else if (piece is Rook rook)
+                    rook.FirstMove = false;
+                else if (piece is Pawn pawn)
+                    pawn.FirstMove = false;
+
                 ProcessMove();
             }
         }
@@ -109,7 +114,7 @@ public class Game
     {
         DisableUnits();
         UpdateMoveLists();
-        Rules.IsInCheck();
+        Rules.IsInCheck(CurrentPlayer, OtherPlayer);
         NextGameState();
         NextCurrentPlayer();
         if ((CurrentState == GameState.WhiteTurn && CurrentPlayer.PlayerColor == Player.Color.White)
@@ -158,15 +163,15 @@ public class Game
     }
 
 
-    private void UpdateMoveLists()
+    public void UpdateMoveLists()
     {
-        for (int j = 0; j < CurrentPlayer.Units.Count; j++)
+        for (int i = 0; i < CurrentPlayer.Units.Count; i++)
         {
-            CurrentPlayer.Units[j].GetComponent<IGamePiece>().SetPossibleMoves();
+            CurrentPlayer.Units[i].GetComponent<IGamePiece>().SetPossibleMoves();
         }
-        for (int j = 0; j < OtherPlayer.Units.Count; j++)
+        for (int i = 0; i < OtherPlayer.Units.Count; i++)
         {
-            OtherPlayer.Units[j].GetComponent<IGamePiece>().SetPossibleMoves();
+            OtherPlayer.Units[i].GetComponent<IGamePiece>().SetPossibleMoves();
         }
     }
 

@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
+using System.Diagnostics;
 
 public class BoardPlane : MonoBehaviour
 {
-    bool initialized = false;//track if Setup() was already called once?
+    //bool initialized = false;//track if Setup() was already called once?
     public const int SIZE = 64;
     public const int SIDE_LEN = 8;
     private const string TILE_PLANE_LAYER = "Tile Plane";
@@ -22,40 +23,76 @@ public class BoardPlane : MonoBehaviour
         Setup();
     }
 
+    public struct MoveSnapshot//use this as params for UnmovePiece. Make MovePiece return this type. Allows for undoing the last move. Use list<MoveSnapshot> to enable multiple undos.
+    {
+        public IGamePiece MovedPiece;
+        public BoardSquare From;
+        public BoardSquare To;
+        public IGamePiece CapturedPiece;
+    }
+
     //Actual game piece move happens here
     public void MovePiece(IGamePiece piece, int moveToTile)
     {
-        int tileNum = piece.GetCurrentTile().SquareNumber;
-        SetOccupier(null, tileNum);
-        BoardSquare tile = GetBoardSquare(moveToTile);
-        piece.SetCurrentTile(tile);
+        // Ensure destination is cleared (capture simulated) and record any captured piece.
+        IGamePiece captured = PrepareMove(moveToTile);
+
+        // Clear source tile (if any) before moving
+        if (piece.GetCurrentTile() != null)
+            SetOccupier(null, piece.GetCurrentTile().SquareNumber);
+
+        // Move piece into destination
+        piece.SetCurrentTile(GetBoardSquare(moveToTile));
         SetOccupier(piece, moveToTile);
+
+        /*
+        //int tileNum = piece.GetCurrentTile().SquareNumber;
+        SetOccupier(null, piece.GetCurrentTile().SquareNumber);
+        //BoardSquare tile = GetBoardSquare(moveToTile);
+        piece.SetCurrentTile(GetBoardSquare(moveToTile));
+        SetOccupier(piece, moveToTile);
+        */
     }
 
 
 
-    public void UnmovePiece(IGamePiece piece, int moveToTile)
+    public void UnmovePiece(IGamePiece newPiece, int newPieceActualTile, //ai complaining about dependence on newPieceActualTile not being null. Should always have value, add null checking anyway.
+        IGamePiece ActualOccupier, int move)
     {
+        SetOccupier(newPiece, newPieceActualTile);
+        newPiece.SetCurrentTile(GetBoardSquare(newPieceActualTile));
+        SetOccupier(null, move);
+        SetOccupier(ActualOccupier, move);
+        ActualOccupier?.SetCurrentTile(GetBoardSquare(move));//null check + setCurrentTile()!!
+    }
 
+    public IGamePiece PrepareMove(int moveSquare)
+    {
+        IGamePiece actualOccupier = null;
+        if (GetOccupier(moveSquare) is not null)
+        {
+            actualOccupier = GetOccupier(moveSquare);
+            SetOccupier(null, moveSquare);
+            //actualOccupier.SetCurrentTile(null);
+        }
+        return actualOccupier;
     }
 
     internal void SetOccupier(IGamePiece piece, int tile)
     {
+        // validate tile index
+        if (!InBounds(tile))
+            throw new System.ArgumentOutOfRangeException(nameof(tile));
+
         int index = tile - 1;
-        if (piece == null)
+
+        // If the destination already has an occupier and we're trying to place another piece, that's an error.
+        if (occupier[index] != null && piece != null)
         {
-            occupier[index] = null;
-            return;
+            throw new System.InvalidOperationException($"Square {tile} already occupied");
         }
 
-        if (occupier[index] != null)
-        {
-            //Debug.LogError("Square already occupied!");
-            //throw new InvalidOperationException(
-            //    $"Tile {tile} already occupied.");
-            return;
-        }
-
+        // Place (or clear) the occupier regardless of that piece's possible moves/attacks.
         occupier[index] = piece;
     }
 
@@ -81,7 +118,7 @@ public class BoardPlane : MonoBehaviour
         if (!InBounds(num))
         {
             //EXCEPTION
-            Debug.Log("BoardPlane.GetBoardSquare() Exception");
+            UnityEngine.Debug.Log("BoardPlane.GetBoardSquare() Exception");
             return null;
         }
         num -= 1;
@@ -92,9 +129,9 @@ public class BoardPlane : MonoBehaviour
     public static bool InBounds(int squareNum)
     {
         int index = squareNum - 1;
-        if (index >= 0 && index < SIZE)
-            return true;
-        return false;
+        if (index < 0 || index >= SIZE)
+            return false;
+        return true;
     }
 
 
@@ -109,7 +146,7 @@ public class BoardPlane : MonoBehaviour
         {
             if (!tileLayer[i].TryGetComponent<BoardSquare>(out BoardSquare tile))
             {
-                Debug.Log("FAILED!");
+                UnityEngine.Debug.Log("FAILED!");
             }
             boardDict.Add(tile.SquareNumber, tile);
         }

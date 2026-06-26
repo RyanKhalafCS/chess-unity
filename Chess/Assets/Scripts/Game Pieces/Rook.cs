@@ -9,7 +9,7 @@ public class Rook : MonoBehaviour, IGamePiece
     private List<BoardSquare> possibleMoves;
     private List<BoardSquare> possibleAttacks;
     [SerializeField] private Player.Color Color;
-    private bool firstMove = true; //CAN ROOK SWAP~~ADD!!!!!!!!!!!
+    public bool FirstMove { get; set; }
 
     private GameRules rules;
     private BoardPlane board;
@@ -19,7 +19,7 @@ public class Rook : MonoBehaviour, IGamePiece
     {
         if (initialized)
             return;
-        firstMove = true;
+        FirstMove = true;
         this.rules = rules;
         this.board = board;
         possibleMoves = new List<BoardSquare>();
@@ -124,7 +124,6 @@ public class Rook : MonoBehaviour, IGamePiece
         GenerateMoves(mList, aList);
         if (mList.Contains(move) || aList.Contains(move))
         {
-            firstMove = false;
             return true;
         }
         return false;

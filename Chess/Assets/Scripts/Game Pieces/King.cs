@@ -9,17 +9,17 @@ public class King : MonoBehaviour, IGamePiece
     private List<BoardSquare> possibleMoves;
     private List<BoardSquare> possibleAttacks;
     [SerializeField] private Player.Color Color;
-    private bool firstMove = true;
+    public bool FirstMove { get; set; }
 
     private GameRules rules;
     private BoardPlane board;
     private bool initialized = false;
 
-    public void Initialize(GameRules rules, BoardPlane board)
+public void Initialize(GameRules rules, BoardPlane board)
     {
         if (initialized)
             return;
-        firstMove = true;
+        FirstMove = true;
         this.rules = rules;
         this.board = board;
         possibleMoves = new List<BoardSquare>();

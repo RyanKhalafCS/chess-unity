@@ -8,7 +8,7 @@ public class AIPlayer : Player
 {
     //Player.Color Color;
     Dictionary<AIMove, int> Moves;//Contains the best Use the highest MR move of them all. MAKE A TYPE CALLED Move WITH <myGampiece, int location, int MoveRank>
-    int MoveRank;
+    //int MoveRank;
     const int pawnKill = 15;
     const int backLineKill = 50;
     const int queenKill = 80;
@@ -17,7 +17,7 @@ public class AIPlayer : Player
 
     public AIPlayer(Color color) : base(color)
     {
-        MoveRank = 0;
+        //MoveRank = 0;
         Moves = new();
     }
 

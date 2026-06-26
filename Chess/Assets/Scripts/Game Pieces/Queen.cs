@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System.Diagnostics;
+
 
 //super boss, transformation, full power
 //uncontrollable pow, revenge, planetary destr
@@ -87,6 +89,7 @@ public class Queen : MonoBehaviour, IGamePiece
                       int dir)
     {  
         bool endpoint = false;
+        //Debug.Log("HERE: " + StackFrame(1).GetMethod().Name)
         int squareNum = GetCurrentTile().SquareNumber + dir;
         while (BoardPlane.InBounds(squareNum) && !Movement.IsOverEdge(squareNum - dir, dir))
         {

@@ -13,8 +13,9 @@ public class SelectPiece : MonoBehaviour
     private Vector3 _currentPos;
     private bool _moving;
     private List<BoardSquare> highlightedTiles;
+    //private GameRules rules;
     //private BoardPlane board;
-    private bool initialized = false;
+    //private bool initialized = false;
 
 
     private void Awake()
@@ -44,6 +45,10 @@ public class SelectPiece : MonoBehaviour
         {
             return;
         }
+
+        //for(int i = 0; i < piece.GetPossibleMoves().Count; i++) {
+        //    Debug.Log("move: " + piece.GetPossibleMoves()[i]);
+        //}
         piece.SetPossibleMoves();//too reduntant here? maybe move into an "if" statement?
         if (highlightedTiles.Count > 0)
         {
@@ -79,12 +84,15 @@ public class SelectPiece : MonoBehaviour
     private void OnMouseUp()
     {
         BoardSquare moveToTile = GameManager.Instance.Board.GetTileBeneath(gameObject);
-
-        if (moveToTile == null)//delete and move
+        GameRules rules = GameManager.Instance?.Game?.Rules;
+        if (rules == null)//null check needed? Game game = GameManager?.Instance?.Game?;
+            return;
+        
+        if (!gameObject.TryGetComponent<IGamePiece>(out IGamePiece piece) || moveToTile == null)
         {
-            transform.position = gameObject.GetComponent<IGamePiece>().GetCurrentTile().transform.position;
+            ReturnPos(piece);
         }
-        else if (GameManager.Instance.Game.Rules.ValidMove(gameObject.GetComponent<IGamePiece>(), moveToTile)) //create field GameManager and initialize field in Init() function. Call from GameManager.
+        else if (rules.ValidMove(piece, moveToTile) && piece.ValidateMove(moveToTile)) //create field GameManager and initialize field in Init() function. Call from GameManager.
         {
             /* if(tile.squareNumber == Movement.CanKingRookSwap(GetComponent<IGamePiece>()).squareNumber)
             {
@@ -94,13 +102,18 @@ public class SelectPiece : MonoBehaviour
         }
         else
         {//return to original pos
-            transform.position = gameObject.GetComponent<IGamePiece>().GetCurrentTile().transform.position;
+            ReturnPos(piece);
         }
         
         UnhighlightTiles();
         _moving = false;
         _startPos = transform.position;
         _currentPos = transform.position;
+    }
+
+    private void ReturnPos(IGamePiece piece)
+    {
+        transform.position = piece.GetCurrentTile().transform.position;
     }
 
 

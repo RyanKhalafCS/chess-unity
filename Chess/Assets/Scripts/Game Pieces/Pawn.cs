@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Pawn : MonoBehaviour, IGamePiece
 {
-    private bool firstMove = true;
+    public bool FirstMove { get; set; }
     [SerializeField] private Player.Color Color;
     [SerializeField] private BoardSquare currentTile;
     private List<BoardSquare> possibleMoves;
@@ -19,6 +19,7 @@ public class Pawn : MonoBehaviour, IGamePiece
     {
         if (initialized)
             return;
+        FirstMove = true;
         this.rules = rules;
         this.board = board;
         possibleMoves = new List<BoardSquare>();
@@ -56,7 +57,6 @@ public class Pawn : MonoBehaviour, IGamePiece
         GenerateMoves(mList, aList);
         if (mList.Contains(move) || aList.Contains(move))
         {
-            firstMove = false;
             return true;
         }
         return false;
@@ -107,7 +107,7 @@ public class Pawn : MonoBehaviour, IGamePiece
 
             //Check second N tile
             squareNum += dir;
-            if (BoardPlane.InBounds(squareNum) && firstMove && rules.CanMove(squareNum))//unnecessary inbounds check
+            if (BoardPlane.InBounds(squareNum) && FirstMove && rules.CanMove(squareNum))//unnecessary inbounds check
             {
                 tile = board.GetBoardSquare(squareNum);
                 moveList.Add(tile);

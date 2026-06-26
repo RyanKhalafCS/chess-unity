@@ -4,7 +4,7 @@ using UnityEngine;
  * TODO notes:
  * Asterisk + tilda (* ~) means completed
  * 
- * Why tf is king not included in player.Units list??? Change it. CTRL + F "units" and change...
+ * player.units accessibility need fix. player.units.add(obj) should not be allowed probably. Just dont iterate over that obj in MoveInCheck.
  * GAMEBOARD ORIENTATION IS NOT STANDARD.
  * Add validation to setOccupier and similar?
  * Really shouldve named BoardPlane as BoardPlane instead...
@@ -64,15 +64,9 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     private void OnColorChosen(bool colorBool)
     {
         Player.Color color;
-        if (colorBool)
-        {
-            color = Player.Color.White;
-        }
-        else
-        {
-            color = Player.Color.Black;
-        }
-        Game = new(Board, color);
+        color = (colorBool) ? Player.Color.White : Player.Color.Black;
+        Game = new(Board);
+        Game.StartGame(color);
     }
 
 
