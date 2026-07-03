@@ -4,6 +4,8 @@ using UnityEngine;
  * TODO notes:
  * Asterisk + tilda (* ~) means completed
  * 
+ * player.Units should be a list of IGamePieces
+ * Set access modifiers correctly
  * player.units accessibility need fix. player.units.add(obj) should not be allowed probably. Just dont iterate over that obj in MoveInCheck.
  * GAMEBOARD ORIENTATION IS NOT STANDARD.
  * Add validation to setOccupier and similar?
@@ -36,23 +38,35 @@ using UnityEngine;
  */
 
 
-public class GameManager : SingletonMonoBehaviour<GameManager>
+public class GameManager : MonoBehaviour
 {
     [SerializeField] private BoardPlane board;
     public BoardPlane Board => board;
     public  Game Game { get; private set; }
+    [SerializeField] private GameObject gamePieces;
     [SerializeField] private ColorSelectPopup popup;
+    public bool Testing { get; private set; }
 
-
-    protected override void Awake()
+    public void Initialize(bool testing)
     {
-        base.Awake();
-        //game = new(board);
+        //SelectPiece.Initialize();
+        if (testing)
+        {
+            this.Testing = true;
+            StartTestGame();
+        }
     }
 
     private void Start()
     {
-        StartGame();
+        if (!Testing)
+            StartGame();
+    }
+
+
+    private void StartTestGame()
+    {
+        Game = new(Board, true);
     }
 
     private void StartGame()
@@ -63,10 +77,10 @@ public class GameManager : SingletonMonoBehaviour<GameManager>
     //create new game
     private void OnColorChosen(bool colorBool)
     {
-        Player.Color color;
-        color = (colorBool) ? Player.Color.White : Player.Color.Black;
-        Game = new(Board);
-        Game.StartGame(color);
+        Color color;
+        color = (colorBool) ? Color.White : Color.Black;
+        gamePieces.SetActive(true);
+        Game = new(Board, color);
     }
 
 

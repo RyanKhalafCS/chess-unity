@@ -1,6 +1,6 @@
+using NUnit.Framework;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-
 public class Game
 {
     public enum GameState
@@ -28,28 +28,45 @@ public class Game
     public BoardPlane Board { get; }
     public GameRules Rules { get; }
     public MoveSim MoveSim { get; }
+    public bool TestGame { get; }
 
 
-    public Game(BoardPlane board)
+    public Game(BoardPlane board, bool testGame)
     {
         CurrentState = GameState.Initializing;
         this.Board = board;
+        this.Board.Initialize(true);
         MoveSim = new MoveSim();
         Rules = new GameRules(this);
+        this.TestGame = testGame;
+        StartGame(Color.White);
     }
 
-    public void StartGame(Player.Color color)
+    public Game(BoardPlane board, Color color)
     {
-        InitGame(color);
-        InitializePieces(CurrentPlayer, Board, Rules);
-        InitializePieces(OtherPlayer, Board, Rules);
-        EnableUnits();
+        CurrentState = GameState.Initializing;
+        this.Board = board;
+        this.Board.Initialize(false);
+        MoveSim = new MoveSim();
+        Rules = new GameRules(this);
+        this.TestGame = false;
+        StartGame(color);
     }
-    private void InitGame(Player.Color color)
-    {
-        PlayerManager playerManager = new(color);
 
-        if (playerManager.Players[0].PlayerColor == Player.Color.White)
+    private void StartGame(Color color)
+    {
+        InitGame(color);//move down to line before enable?
+        InitializePieces(CurrentPlayer, Board);
+        InitializePieces(OtherPlayer, Board);
+        // Ensure only the current player can select pieces at start
+        DisableUnits(OtherPlayer);
+        EnableUnits(CurrentPlayer);
+    }
+    private void InitGame(Color color)
+    {
+        PlayerManager playerManager = new(color, TestGame);
+
+        if (playerManager.Players[0].PlayerColor == Color.White)
         {
             CurrentPlayer = playerManager.Players[0];
             OtherPlayer = playerManager.Players[1];
@@ -64,7 +81,7 @@ public class Game
             + "\nCurrent Player Color = " + CurrentPlayer.PlayerColor);
     }
 
-    private void InitializePieces(Player player, BoardPlane board, GameRules rules)
+    private void InitializePieces(Player player, BoardPlane board)
     {
         for(int i = 0; i < player.Units.Count; i++)
         {
@@ -72,7 +89,7 @@ public class Game
             {
                 //EXCEPTION
             }
-            piece.Initialize(rules, board);
+            piece.Initialize(board);
         }
     }
 
@@ -90,18 +107,14 @@ public class Game
                 int tileNum = moveToTile.SquareNumber;
                 if (Board.GetOccupier(tileNum) != null)
                 {
-                    DestroyUnit(Board.GetOccupier(tileNum).GetObj());
+                    IGamePiece temp = (IGamePiece)Board.GetOccupier(tileNum);
+                    DestroyUnit(temp.GetObj());
                 }
                 Board.MovePiece(piece, tileNum);
                 //should make class for moving visual GameObjects
                 obj.transform.position = moveToTile.transform.position;
 
-                if (piece is King king)
-                    king.FirstMove = false;
-                else if (piece is Rook rook)
-                    rook.FirstMove = false;
-                else if (piece is Pawn pawn)
-                    pawn.FirstMove = false;
+                piece.OnMoved();    //Sets first move to false
 
                 ProcessMove();
             }
@@ -112,15 +125,15 @@ public class Game
 
     internal void ProcessMove()
     {
-        DisableUnits();
+        DisableUnits(CurrentPlayer);
         UpdateMoveLists();
         Rules.IsInCheck(CurrentPlayer, OtherPlayer);
         NextGameState();
         NextCurrentPlayer();
-        if ((CurrentState == GameState.WhiteTurn && CurrentPlayer.PlayerColor == Player.Color.White)
-            || (CurrentState == GameState.BlackTurn && CurrentPlayer.PlayerColor == Player.Color.Black))
+        if ((CurrentState == GameState.WhiteTurn && CurrentPlayer.PlayerColor == Color.White)
+            || (CurrentState == GameState.BlackTurn && CurrentPlayer.PlayerColor == Color.Black))
         {
-            EnableUnits();
+            EnableUnits(CurrentPlayer);
             Debug.Log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~NEXT TURN~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             Debug.Log("GameState = " + CurrentState + "Current Player = " + CurrentPlayer);
         }
@@ -176,33 +189,70 @@ public class Game
     }
 
     //RECALCULATE UNIT MOVES/ATTACKS?
-    public void DestroyUnit(GameObject obj)
+    private void DestroyUnit(GameObject obj)
     {
-        OtherPlayer.RemoveUnit(obj);
+        OtherPlayer.RemoveUnit(obj);//maybe remove unit should return unit
         IGamePiece piece = obj.GetComponent<IGamePiece>();
         if (OtherPlayer.UnitsCheckingEnemyKing.Contains(piece))
             OtherPlayer.UnitsCheckingEnemyKing.Remove(piece);
-        Board.SetOccupier(null, piece.GetCurrentTile().SquareNumber);//obj.GetComponent<IGamePiece>().GetCurrentTile().Occupier = null;
+        Board.SetOccupier(null, piece.GetCurrentTile().SquareNumber);
         piece.SetCurrentTile(null);
-        obj.SetActive(false);
+        //obj.SetActive(false);
+        Object.Destroy(obj);
     }
 
 
-
-    private void DisableUnits()
+    //private void ToggleUnits()
+    //{//toggle units enabled based off of current state?
+    //    //Disable current player's SelectPiece component if present.
+    //     for (int i = 0; i < CurrentPlayer.Units.Count; i++)
+    //     {
+    //         GameObject unit = CurrentPlayer.Units[i];
+    //         if (unit == null) continue;
+    //         if (unit.TryGetComponent<SelectPiece>(out SelectPiece sp))
+    //         {
+    //            sp.enabled = !sp.enabled;
+    //            sp.OnDisable();
+    //         }
+    //         else
+    //         {
+    //             Debug.Log($"i = {i}, Unit '{unit.name}' has no SelectPiece component.");
+    //         }
+    //     }
+    //}
+    private void DisableUnits(Player player)
     {
-        //Disable OtherPlayers's actions.
-        for (int i = 0; i < CurrentPlayer.Units.Count; i++)
+        // Disable current player's SelectPiece component if present.
+        for (int i = 0; i < player.Units.Count; i++)
         {
-            Object.Destroy(CurrentPlayer.Units[i].GetComponent<SelectPiece>());
+            GameObject unit = player.Units[i];
+            if (unit == null) continue;
+            if (unit.TryGetComponent<SelectPiece>(out SelectPiece sp))
+            {
+                sp.enabled = false;
+                sp.OnDisable();
+            }
+            else
+            {
+                Debug.Log($"i = {i}, Unit '{unit.name}' has no SelectPiece component.");
+            }
         }
     }
-    private void EnableUnits()
+    private void EnableUnits(Player player)
     {
-        //Enable new CurrentPlayers actions.
-        for (int i = 0; i < CurrentPlayer.Units.Count; i++)
+        // Enable new current player's SelectPiece component if present.
+        for (int i = 0; i < player.Units.Count; i++)
         {
-            CurrentPlayer.Units[i].AddComponent<SelectPiece>();
+            GameObject unit = player.Units[i];
+            if (unit == null) continue;
+            if (unit.TryGetComponent<SelectPiece>(out SelectPiece sp))
+            {
+                sp.enabled = true;
+            }
+            else
+            {
+                Debug.Log($"Unit '{unit.name}' has no SelectPiece component to enable.");
+            }
         }
     }
 
@@ -217,7 +267,9 @@ public class Game
 
     private void OnCheckmate()
     {
-        DisableUnits();
+        // Disable selection for both players when the game ends
+        DisableUnits(CurrentPlayer);
+        DisableUnits(OtherPlayer);
         Debug.Log("CHECKMATE!\n" + CurrentPlayer.PlayerColor + " Wins!");
         //Open popup prompt to either exit or restart.
     }

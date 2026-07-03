@@ -1,0 +1,17 @@
+{
+    "name": "Chess.Core",
+    "rootNamespace": "",
+    "references": [
+        "Chess.Utilities",
+        "Chess.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

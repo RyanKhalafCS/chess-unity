@@ -57,7 +57,10 @@ public class MoveSim
         if(ActualOccupier != null)
             notMovingPlayer.Units.Remove(ActualOccupier.GetObj());
         //Check check
-        badMove = game.Rules.IsInCheck(notMovingPlayer, movingPlayer);
+        if (game.TestGame)
+            badMove = game.Rules.IsInCheck(movingPlayer, notMovingPlayer);
+        else
+            badMove = game.Rules.IsInCheck(notMovingPlayer, movingPlayer);//maybe write it so that both players are checked for check
 
         //Debug.Log("np = " + newPiece + ", " + newPieceActualTile.SquareNumber + "\nActual occ = " + ActualOccupier + ", " + moveSquare);
         //undo move

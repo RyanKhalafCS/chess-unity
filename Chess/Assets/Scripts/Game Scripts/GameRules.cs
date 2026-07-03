@@ -11,34 +11,17 @@ public class GameRules
     }
 
 
-    public bool CanMove(int squareNum)
-    {
-        //if (GameManager.Instance.BoardPlane.GetOccupier(squareNum) == null)//PASS BOARD IN THRU CALL
-        //    return true;
-        //return false;
-        return game.Board.GetOccupier(squareNum) == null;
-    }
-
-
-    public bool CanAttack(Player.Color currentPiece, int squareNum)
-    {
-        IGamePiece atkedPiece = game.Board.GetOccupier(squareNum);//PASS BOARD IN THRU CALL
-        //if(atkedPiece != null && currentPiece != atkedPiece.GetColor())
-        //    return true;
-        //return false;
-        return atkedPiece != null && currentPiece != atkedPiece.GetColor();
-    }
-
 
     //bounds checking needed? Dont think so, either SelectPiece checks or gamePiece.move
     public bool ValidMove(IGamePiece gPiece, BoardSquare move)
     {
-        if (move is null)
+        if (move == null)
             return false;
         if (move == gPiece.GetCurrentTile())
             return false;
         IGamePiece occupier = game.Board.GetOccupier(move.SquareNumber);
         //Debug.Log("VALIDMOVE 1= " + occupier);
+        gPiece.SetPossibleMoves();
         if (game.MoveSim.MoveInCheck(gPiece, move, game))
         {
             Debug.Log("King would be in check. Move must protect king.");
