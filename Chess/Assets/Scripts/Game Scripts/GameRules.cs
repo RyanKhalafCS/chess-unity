@@ -21,6 +21,10 @@ public class GameRules
             return false;
         IGamePiece occupier = game.Board.GetOccupier(move.SquareNumber);
         //Debug.Log("VALIDMOVE 1= " + occupier);
+        // Reject a move onto a same-color piece up front. This also keeps MoveSim from
+        // simulating a "capture" of a friendly piece (which pollutes the Units rosters).
+        if (occupier != null && occupier.GetColor() == gPiece.GetColor())
+            return false;
         gPiece.SetPossibleMoves();
         if (game.MoveSim.MoveInCheck(gPiece, move, game))
         {
@@ -201,7 +205,7 @@ public class GameRules
             for (int j = 0; j < paths.Count; j++)
             {
                 BoardSquare tile = game.Board.GetBoardSquare(paths[j]);
-                if (ValidMove(unitDefending, tile))//unitDefending.GetPossibleMoves().Contains(tile) && 
+                if (ValidMove(unitDefending, tile))
                 {
                     return true;
                 }

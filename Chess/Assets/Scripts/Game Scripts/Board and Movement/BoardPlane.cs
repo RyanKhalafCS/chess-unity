@@ -6,25 +6,29 @@ using System.Diagnostics;
 
 public class BoardPlane : MonoBehaviour
 {
-    //bool initialized = false;//track if Setup() was already called once?
+    bool initialized = false;
     public const int SIZE = 64;
     public const int SIDE_LEN = 8;
     private const string TILE_PLANE_LAYER = "Tile Plane";
     private readonly BoardSquare[,] board = new BoardSquare[8, 8];
     [SerializeField] private GameObject[] tileLayer = new GameObject[64];
-    private readonly Dictionary<int, BoardSquare> boardDict = new();//<squareNum, Square>
+    private readonly Dictionary<int, BoardSquare> boardDict = new();
     private readonly IGamePiece[] occupier = new IGamePiece[64];
     public bool Testing = false;
 
     public void Initialize(bool testing)
     {
+        if (initialized)
+            return;
         this.Testing = testing;
         ArrayToDict();
+
         if (testing)
             SetupTestBoard();
         else
             Setup();
 
+        initialized = true;
     }
 
 
@@ -67,14 +71,14 @@ public class BoardPlane : MonoBehaviour
 
 
 
-    public void UnmovePiece(IGamePiece newPiece, int newPieceActualTile, //ai complaining about dependence on newPieceActualTile not being null. Should always have value, add null checking anyway.
+    public void UnmovePiece(IGamePiece newPiece, int newPieceActualTile,
         IGamePiece ActualOccupier, int move)
     {
         SetOccupier(newPiece, newPieceActualTile);
         newPiece.SetCurrentTile(GetBoardSquare(newPieceActualTile));
         SetOccupier(null, move);
         SetOccupier(ActualOccupier, move);
-        ActualOccupier?.SetCurrentTile(GetBoardSquare(move));//null check + setCurrentTile()!!
+        ActualOccupier?.SetCurrentTile(GetBoardSquare(move));//null check + setCurrentTile()!! 
     }
 
     // Prepares moveSquare for an incoming piece
@@ -86,7 +90,6 @@ public class BoardPlane : MonoBehaviour
         {
             actualOccupier = GetOccupier(moveSquare);
             SetOccupier(null, moveSquare);
-            //actualOccupier.SetCurrentTile(null);
         }
         return actualOccupier;
     }
@@ -153,19 +156,7 @@ public class BoardPlane : MonoBehaviour
 
 
 
-    //~~~~~~~~~~~BOARD SETUP BELOW~~~~~~~~~~~~~
-    //private int SetupPieces()
-    //{
-    //    GameObject prefab = Resources.Load<GameObject>(BLACK_PAWN_PF);
-    //    for (int i = 0; i < 8; i++)
-    //    {
-    //        Quaternion q = Quaternion.identity;
-    //        Instantiate(prefab, board[0, i].transform.position, 1);
-    //    }
-
-
-    //    return 0;
-    //}    
+    //~~~~~~~~~~~BOARD SETUP BELOW~~~~~~~~~~~~~   
 
     //finally going to have to fix the way game is setup. This is temp fix till then.
     public void SetupTestBoard()
@@ -177,43 +168,38 @@ public class BoardPlane : MonoBehaviour
                 int squareNumber = SIDE_LEN * i + j + 1;
                 if (!boardDict.TryGetValue(squareNumber, out BoardSquare tile))
                 {
-                    //didnt find
+                    //didnt find boardsquare
+                    ExceptionHandler.PrintException(-1);
+                    UnityEngine.Debug.Log($"Missing BoardSquare {i} in BoardPlane.SetupTestBoard()!");
+                    ExceptionHandler.ForceQuit();
                 }
 
                 board[i, j] = tile;
             }
         }
-        //for (int i = 0; i < SIDE_LEN; i++)
-        //{
-        //    for (int j = 0; j < SIDE_LEN; j++)
-        //    {
-        //        int squareNumber = SIDE_LEN * i + j + 1;
-        //        if (!InBounds(squareNumber))
-        //        {
-        //            break;
-        //        }
-        //        GameObject obj = new();
-        //        board[i, j] = obj.AddComponent<BoardSquare>();
-        //        obj.name = "";
-
-
-        //        //
-        //        //SetInitialOccupiers(tile);
-        //        //board[i, j] = tile;
-        //    }
-        //}
     }
 
 
     private void ArrayToDict()
     {
+        boardDict.Clear();
+
         for (int i = 0; i < tileLayer.Length; i++)
         {
             if (!tileLayer[i].TryGetComponent<BoardSquare>(out BoardSquare tile))
             {
-                UnityEngine.Debug.Log("FAILED!");
+                UnityEngine.Debug.Log($"FAILED to get BoardSquare at index {i}");
+                continue;
             }
-            boardDict.Add(tile.SquareNumber, tile);
+
+            int key = tile.SquareNumber;
+            if (boardDict.ContainsKey(key))
+            {
+                //UnityEngine.Debug.LogWarning($"Duplicate SquareNumber {key} at index {i} - skipping");
+                continue;
+            }
+
+            boardDict.Add(key, tile);
         }
         //DEALLOCATE tileLayer!! AFTER SETUP, DEALLOCATE boardDict!!
     }

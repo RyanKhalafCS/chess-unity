@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class MoveSim
@@ -54,12 +55,16 @@ public class MoveSim
                 continue;
             enemyPiece.SetPossibleMoves();
         }
-        if(ActualOccupier != null)
-            notMovingPlayer.Units.Remove(ActualOccupier.GetObj());
+
+        bool removedEnemyUnit = ActualOccupier != null
+            && notMovingPlayer.Units.Remove(ActualOccupier.GetObj());
+        bool movingCheckBefore = movingPlayer.Check;
+        List<IGamePiece> checkersBefore = new(notMovingPlayer.UnitsCheckingEnemyKing);
+
         //Check check
-        if (game.TestGame)
-            badMove = game.Rules.IsInCheck(movingPlayer, notMovingPlayer);
-        else
+        //if (game.TestGame)
+        //    badMove = game.Rules.IsInCheck(movingPlayer, notMovingPlayer);
+        //else
             badMove = game.Rules.IsInCheck(notMovingPlayer, movingPlayer);//maybe write it so that both players are checked for check
 
         //Debug.Log("np = " + newPiece + ", " + newPieceActualTile.SquareNumber + "\nActual occ = " + ActualOccupier + ", " + moveSquare);
@@ -68,85 +73,18 @@ public class MoveSim
 
         //Debug.Log("np = " + newPiece + ", " + newPieceActualTile.SquareNumber + "\nActual occ = " + ActualOccupier + ", " + moveSquare);
         //Debug.Log("occ 4 = " + move + ", " + game.Board.GetOccupier(move.SquareNumber));
-        if (ActualOccupier != null)
+        if (removedEnemyUnit)//only re-add if it was genuinely removed from notMovingPlayer above
             notMovingPlayer.Units.Add(ActualOccupier.GetObj());
         //reset unit's moves//USE FUNCTION
         game.UpdateMoveLists();
-        //for (int i = 0; i < notMovingPlayer.Units.Count; i++)
-        //{
-        //    IGamePiece enemyPiece = notMovingPlayer.Units[i].GetComponent<IGamePiece>();
-        //    enemyPiece.SetPossibleMoves();
-        //}
-        //for (int i = 0; i < movingPlayer.Units.Count; i++)
-        //{
-        //    IGamePiece piece = movingPlayer.Units[i].GetComponent<IGamePiece>();
-        //    piece.SetPossibleMoves();
-        //}
+
+        // Restore the real check-state the simulation clobbered above.
+        movingPlayer.SetInCheck(movingCheckBefore);
+        notMovingPlayer.UnitsCheckingEnemyKing = checkersBefore;
 
         //Debug.Log("occ 5 = " + move + ", " + game.Board.GetOccupier(move.SquareNumber));
 
         //Debug.Log("np = " + newPiece + ", " + newPieceActualTile.SquareNumber + "\nActual occ = " + ActualOccupier + ", " + moveSquare);
         return badMove;
     }
-
-
-
-
-    /*
-     */
-
-    /*
-     
-        game.Board.SetOccupier(null, newPieceActualTile.SquareNumber);//newPieceActualTile.Occupier = null;
-        game.Board.SetOccupier(newPiece, moveSquare);//move.Occupier = newPiece;
-        newPiece.SetCurrentTile(move);
-     */
-    /*
-     //for (int i = 0; i < notMovingPlayer.Units.Count; i++)
-        //{
-        //    IGamePiece EnemyPiece = notMovingPlayer.Units[i].GetComponent<IGamePiece>();
-        //    if (EnemyPiece == ActualOccupier)
-        //        continue;
-        //    EnemyPiece.SetPossibleMoves();
-        //    if (newPiece is King && EnemyPiece.GetPossibleAttacks().Contains(move))
-        //    {
-        //        badMove = true;
-        //    }
-        //    else if (EnemyPiece.GetPossibleAttacks().Contains(movingPlayer.PlayersKing.GetCurrentTile()))
-        //    {
-        //        badMove = true;
-        //    }
-        //}
-        /* END CHECK IF MOVE ENDANGERS KING */
-        /* UNDO MOVE SWAP */
-        //newPieceActualTile.Occupier = newPiece;
-
-
-        //Debug.Log("CHECKING>>>");
-        //King enemyKing = notMovingPlayer.PlayersKing;
-        //enemyKing.SetPossibleMoves();
-        //for(int i = 0; i < enemyKing.GetPossibleAttacks().Count; i++)
-        //{
-        //    Debug.Log("attack tile = " + enemyKing.GetPossibleAttacks()[i]);
-        //}
-        //if (newPiece is King && enemyKing.GetPossibleAttacks().Contains(movingPlayer.PlayersKing.GetCurrentTile()))//Contains(move))
-        //    badMove = true;
-        //Debug.Log("DONE CHECKING>>>");
-
-    //game.Board.SetOccupier(newPiece, newPieceActualTile.SquareNumber);
-        //newPiece.SetCurrentTile(newPieceActualTile);
-        //game.Board.SetOccupier(ActualOccupier, moveSquare);
-        //if (hadOccupier)
-        //{
-        //    ActualOccupier.SetCurrentTile(move);
-        //}
-
-        //for (int i = 0; i < notMovingPlayer.Units.Count; i++)
-        //{
-        //    IGamePiece enemyPiece = notMovingPlayer.Units[i].GetComponent<IGamePiece>();
-        //    enemyPiece.SetPossibleMoves();
-        //}
-        /* END UNDO MOVE SWAP */
-        //if(badMove)
-        //    Debug.Log("King would be in check. Move must protect king.");
 }

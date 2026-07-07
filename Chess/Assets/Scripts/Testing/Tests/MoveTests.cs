@@ -20,9 +20,11 @@ public class MoveTests
     public IEnumerator MoveTest_SimplePass()
     {
         /*ARRANGE*/
+        TestRuntime.IsTesting = true;
         yield return SceneManager.LoadSceneAsync(
             "SampleScene",
             LoadSceneMode.Single);
+        yield return null;
 
         GameObject queenObj = new("White Queen");
         Queen queen = queenObj.AddComponent<Queen>();

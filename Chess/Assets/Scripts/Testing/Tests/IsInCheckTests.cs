@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -13,22 +14,126 @@ public class IsInCheckTests
     {
         this.testGameFactory = new TestGameFactory();
     }
-    // A Test behaves as an ordinary method
-    [Test]
-    public void IsInCheckTests_SimplePasses()
-    {
-        // Use the Assert class to test conditions
-    }
 
-    // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
-    // `yield return null;` to skip a frame.
+
     [UnityTest]
-    public IEnumerator IsInCheckTests_EnumeratorPasses()
+    public IEnumerator IsInCheckTest_NoCheck()
     {
-        // Use the Assert class to test conditions.
-        // Use yield to skip a frame.
+        /*ARRANGE*/
+        TestRuntime.IsTesting = true;
+        yield return SceneManager.LoadSceneAsync(
+            "SampleScene",
+            LoadSceneMode.Single);
         yield return null;
+
+        GameObject queenObj = new("White Queen");
+        Queen queen = queenObj.AddComponent<Queen>();
+        Color qColor = Color.White;
+        const int QUEEN_TILE = 3;
+
+        GameManager gm = testGameFactory.CreateSinglePieceGame(
+            queen, qColor,
+            QUEEN_TILE,
+            TestGameFactory.WHITE_KING_LOC,
+            TestGameFactory.BLACK_KING_LOC);
+
+        Game game = gm.Game;
+        BoardPlane board = game.Board;
+
+        queen.SetPossibleMoves();
+        game.OtherPlayer.PlayersKing.SetPossibleMoves();
+
+        /*ACT*/
+        bool check = game.Rules.IsInCheck(game.CurrentPlayer, game.OtherPlayer);
+
+        /*ASSERT*/
+        Assert.IsFalse(check);
     }
 
 
+    [UnityTest]
+    public IEnumerator IsInCheckTest_InCheckNoCheckmate()
+    {
+        /*ARRANGE*/
+        TestRuntime.IsTesting = true;
+        yield return SceneManager.LoadSceneAsync(
+            "SampleScene",
+            LoadSceneMode.Single);
+        yield return null;
+
+        GameObject queenObj = new("White Queen");
+        Queen queen = queenObj.AddComponent<Queen>();
+        Color qColor = Color.White;
+        const int QUEEN_TILE = 44;
+
+        GameManager gm = testGameFactory.CreateSinglePieceGame(
+            queen, qColor,
+            QUEEN_TILE,
+            TestGameFactory.WHITE_KING_LOC,
+            TestGameFactory.BLACK_KING_LOC);
+
+        Game game = gm.Game;
+        BoardPlane board = game.Board;
+
+        queen.SetPossibleMoves();
+        game.OtherPlayer.PlayersKing.SetPossibleMoves();
+
+        /*ACT*/
+        bool check = game.Rules.IsInCheck(game.CurrentPlayer, game.OtherPlayer);
+
+        /*ASSERT*/
+        Assert.IsTrue(check);
+    }
+
+
+    [UnityTest]
+    public IEnumerator IsInCheckTest_CheckAndCheckmate()
+    {
+        /*ARRANGE*/
+        TestRuntime.IsTesting = true;
+        yield return SceneManager.LoadSceneAsync(
+            "SampleScene",
+            LoadSceneMode.Single);
+        yield return null;
+
+        List<IGamePiece> pieces = new();
+        List<Color> colors = new();
+        List<int> locations = new();
+
+        GameObject queenObj = new("White Queen");
+        Queen queen = queenObj.AddComponent<Queen>();
+        Color qColor = Color.White;
+        const int QUEEN_TILE = 52;
+        pieces.Add(queen);
+        colors.Add(qColor);
+        locations.Add(QUEEN_TILE);
+
+        GameObject pawnObj = new("White Pawn");
+        Pawn pawn = pawnObj.AddComponent<Pawn>();
+        Color pColor = Color.White;
+        const int PAWN_TILE = 45;
+        pawn.FirstMove = false;
+        pieces.Add(pawn);
+        colors.Add(pColor);
+        locations.Add(PAWN_TILE);
+
+        GameManager gm = testGameFactory.CreateNPieceGame(
+            pieces, colors, locations,
+            TestGameFactory.WHITE_KING_LOC,
+            TestGameFactory.BLACK_KING_LOC);
+
+        Game game = gm.Game;
+        BoardPlane board = game.Board;
+
+        queen.SetPossibleMoves();
+        pawn.SetPossibleMoves();
+        game.OtherPlayer.PlayersKing.SetPossibleMoves();
+
+        /*ACT*/
+        game.Rules.IsInCheck(game.CurrentPlayer, game.OtherPlayer);
+        bool checkmate = game.Rules.IsCheckmate();
+
+        /*ASSERT*/
+        Assert.IsTrue(checkmate);
+    }
 }

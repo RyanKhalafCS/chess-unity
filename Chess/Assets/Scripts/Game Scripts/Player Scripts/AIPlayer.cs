@@ -6,19 +6,19 @@ using UnityEngine;
 
 public class AIPlayer : Player
 {
-    //Player.Color Color;
-    Dictionary<AIMove, int> Moves;//Contains the best Use the highest MR move of them all. MAKE A TYPE CALLED Move WITH <myGampiece, int location, int MoveRank>
-    //int MoveRank;
-    const int pawnKill = 15;
-    const int backLineKill = 50;
-    const int queenKill = 80;
-    const int kingCheck = 70;
-    const int checkmateThreshold = 200;
+    ////Player.Color Color;
+    //Dictionary<AIMove, int> Moves;//Contains the best Use the highest MR move of them all. MAKE A TYPE CALLED Move WITH <myGampiece, int location, int MoveRank>
+    ////int MoveRank;
+    //const int pawnKill = 15;
+    //const int backLineKill = 50;
+    //const int queenKill = 80;
+    //const int kingCheck = 70;
+    //const int checkmateThreshold = 200;
 
     public AIPlayer(Color color, bool testing) : base(color, testing)
     {
         //MoveRank = 0;
-        Moves = new();
+        //Moves = new();
     }
 
 
@@ -70,11 +70,11 @@ public class AIPlayer : Player
 }
 public class AIMove
 {
-    IGamePiece Piece;
-    int Loc;//squareNumber
-    public AIMove(IGamePiece _piece, int _loc)
-    {
-        this.Piece = _piece;
-        this.Loc = _loc;
-    }
+    //IGamePiece Piece;
+    //int Loc;//squareNumber
+    //public AIMove(IGamePiece _piece, int _loc)
+    //{
+    //    this.Piece = _piece;
+    //    this.Loc = _loc;
+    //}
 }

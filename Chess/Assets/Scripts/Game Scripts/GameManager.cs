@@ -4,6 +4,12 @@ using UnityEngine;
  * TODO notes:
  * Asterisk + tilda (* ~) means completed
  * 
+ * maybe use more dictionaries for things like Unit lists. Not really needed though. ID would be useful in this case.
+ * MoveInCheck's call to IsInCheck() will still set the player.checked flag.
+ * Rethink test flow. Instead of gamePiece.TestInit() to decide colors, find a better, safer way.
+ * BUG: after lots of moves, some of the non-turn player's units will still have SelectPiece enabled when they shouldnt, allowing them to attempt a move. Maybe just go back to removeComponent. SetEnabled() is wacky.
+ * might be good idea to have gamePiece IDs for some extra functionalities.
+ * create a struct to hold vars for PrepareMove() and Unmove()
  * player.Units should be a list of IGamePieces
  * Set access modifiers correctly
  * player.units accessibility need fix. player.units.add(obj) should not be allowed probably. Just dont iterate over that obj in MoveInCheck.
@@ -47,26 +53,30 @@ public class GameManager : MonoBehaviour
     [SerializeField] private ColorSelectPopup popup;
     public bool Testing { get; private set; }
 
-    public void Initialize(bool testing)
+
+    private void Start()
     {
-        //SelectPiece.Initialize();
-        if (testing)
+        // Allow tests to opt-in to test-mode before Unity.Start() runs.
+        // Tests should set TestRuntime.IsTesting = true before loading the scene.
+        //TEST MODE - this mode functions exactly like a normal game, except
+        //  that the board is created empty and the Players are created with only a King.
+        if (TestRuntime.IsTesting)
         {
             this.Testing = true;
             StartTestGame();
         }
-    }
-
-    private void Start()
-    {
-        if (!Testing)
+        else
+        {
+            this.Testing = false;
             StartGame();
+        }
     }
 
 
     private void StartTestGame()
     {
-        Game = new(Board, true);
+        Debug.Log("////////////////TEST MODE////////////////");
+        Game = new(Board);
     }
 
     private void StartGame()
@@ -79,7 +89,7 @@ public class GameManager : MonoBehaviour
     {
         Color color;
         color = (colorBool) ? Color.White : Color.Black;
-        gamePieces.SetActive(true);
+        //gamePieces.SetActive(true);
         Game = new(Board, color);
     }
 
@@ -89,13 +99,13 @@ public class GameManager : MonoBehaviour
     /// </summary>
     /// <param name="obj"></param>
     /// <param name="moveToTile"></param>
-    public void RequestMove(GameObject obj, BoardSquare moveToTile)//SHOULD NOT BE PASSING AROUND ENTIRE OBJECTS TOO MUCH.
+    public bool RequestMove(GameObject obj, BoardSquare moveToTile)//SHOULD NOT BE PASSING AROUND ENTIRE OBJECTS TOO MUCH.
     {
         if (obj == null || moveToTile == null)
         {
-            return;
+            return false;
         }
-        Game.TryMove(obj, moveToTile);
+        return Game.TryMove(obj, moveToTile);
     }
 
 }

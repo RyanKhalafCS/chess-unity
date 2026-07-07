@@ -13,15 +13,18 @@ public class SelectPiece : MonoBehaviour
     private Vector3 _currentPos;
     private bool _moving;
     private List<BoardSquare> highlightedTiles;
-    [SerializeField] private GameManager gm;//use scriptable obj i think
+    private GameManager gm;//use scriptable obj i think
     //private GameRules rules;
     //private BoardPlane board;
     private bool initialized = false;
+    private bool processingMove = false;
+    //[SerializeField] private bool componentExists;
 
 
     private void Awake()
     {
         //hasSelected = false;
+        //componentExists = true;
         originalMaterial = Resources.Load(ORIGINAL_MATERIAL) as Material;
         newMaterial = Resources.Load(HIGHLIGHT) as Material;
         _startPos = transform.position;
@@ -30,24 +33,34 @@ public class SelectPiece : MonoBehaviour
         highlightedTiles = new List<BoardSquare>();
     }
 
-    //public void Initialize()
-    //{
-    //    if (initialized)
-    //    {
-    //        return;
-    //    }
-    //    GameObject gmObj = GameObject.FindGameObjectWithTag("Game Manager");
-    //    //Assert.IsNotNull(gmObj, "Couldn't find Game Manager.");
-    //    GameManager gm = gmObj.GetComponent<GameManager>();
-    //    this.gm = gm;
-    //    initialized = true;
-    //}
-
-    private void OnMouseDown()//record original pos... rather, retrieve Pawn.getCurrentTile();
+    public void Initialize()
     {
-        if(!enabled)
-        {  return; }    
-        if(!gameObject.TryGetComponent<IGamePiece>(out IGamePiece piece))
+        if (initialized)
+        {
+            return;
+        }
+        GameObject gmObj = GameObject.FindGameObjectWithTag("Game Manager");
+        if (gmObj == null)
+        {
+            ExceptionHandler.PrintException(ExceptionHandler.GAMEOBJECT_NOT_FOUND_EXCEPTION);
+            ExceptionHandler.ForceQuit();
+            return;
+        }
+        if(!gmObj.TryGetComponent<GameManager>(out GameManager gm))
+        {
+            ExceptionHandler.PrintException(ExceptionHandler.COMPONENT_NOT_FOUND_EXCEPTION);
+            ExceptionHandler.ForceQuit();
+            return;
+        }
+        this.gm = gm;//manager;
+        initialized = true;
+    }
+
+    private void OnMouseDown()
+    {
+        if (!enabled)// || !componentExists)
+        { return; }
+        if (!gameObject.TryGetComponent<IGamePiece>(out IGamePiece piece))
         {
             return;
         }
@@ -66,7 +79,7 @@ public class SelectPiece : MonoBehaviour
 
     private void OnMouseDrag()
     {
-        if(!enabled)
+        if(!enabled)// || !componentExists)
         { return; }
         Vector3 mouseScreenPos = Input.mousePosition;
         float distanceToCamera = Camera.main.WorldToScreenPoint(transform.position).z;
@@ -88,19 +101,22 @@ public class SelectPiece : MonoBehaviour
 
     private void OnMouseUp()
     {
-        if (!enabled)
-            return;
+        if (!enabled)// || !componentExists)
+        { return; }
+        //if (processingMove)
+        //    return;
+        //processingMove = true;
 
         BoardSquare moveToTile = gm.Board.GetTileBeneath(gameObject);
         GameRules rules = gm?.Game?.Rules;
-        if (rules == null)//null check needed? Game game = GameManager?.Instance?.Game?;
+        if (rules == null)//fix later
             return;
         
         if (!gameObject.TryGetComponent<IGamePiece>(out IGamePiece piece) || moveToTile == null)
         {
             ReturnPos(piece);
         }
-        else if (rules.ValidMove(piece, moveToTile) && piece.ValidateMove(moveToTile)) //create field GameManager and initialize field in Init() function. Call from GameManager.
+        else if (rules.ValidMove(piece, moveToTile) && piece.ValidateMove(moveToTile))
         {
             /* if(tile.squareNumber == Movement.CanKingRookSwap(GetComponent<IGamePiece>()).squareNumber)
             {
@@ -113,11 +129,7 @@ public class SelectPiece : MonoBehaviour
             ReturnPos(piece);
         }
         
-        //UnhighlightTiles();
-        //_moving = false;
-        //_startPos = transform.position;
-        //_currentPos = transform.position;
-        OnDisable();
+        Cleanup();
     }
 
     private void ReturnPos(IGamePiece piece)
@@ -125,13 +137,15 @@ public class SelectPiece : MonoBehaviour
         transform.position = piece.GetCurrentTile().transform.position;
     }
 
-    public void OnDisable()
+    public void Cleanup()
     {
         UnhighlightTiles();
         _moving = false;
         _startPos = transform.position;
         _currentPos = transform.position;
+        //componentExists = false;
     }
+
 
     //move this to new script later maybe
     private void HighlightTiles(List<BoardSquare> tiles)

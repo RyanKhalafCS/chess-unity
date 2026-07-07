@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -24,24 +25,38 @@ public class DestroyUnitTests
     [UnityTest]
     public IEnumerator DestroyUnitTest_QueenAttackPawn()
     {
-        //SceneManager.LoadScene("SampleScene", LoadSceneMode.Single);
-        //yield return null;
         /*ARRANGE*/
+        TestRuntime.IsTesting = true;
         yield return SceneManager.LoadSceneAsync(
             "SampleScene",
             LoadSceneMode.Single);
+        yield return null;
+
+        List<IGamePiece> pieces = new();
+        List<Color> colors = new();
+        List<int> locations = new();
 
         GameObject queenObj = new("White Queen");
         Queen queen = queenObj.AddComponent<Queen>();
+        Color qColor = Color.White;
         const int QUEEN_TILE = 5;
+        pieces.Add(queen);
+        colors.Add(qColor);
+        locations.Add(QUEEN_TILE);
 
         GameObject pawnObj = new("Black Pawn");
         Pawn pawn = pawnObj.AddComponent<Pawn>();
+        Color pColor = Color.Black;
         const int PAWN_TILE = 33;
+        pieces.Add(pawn);
+        colors.Add(pColor);
+        locations.Add(PAWN_TILE);
 
-        GameManager gm = testGameFactory.CreateTwoPieceGame(
-            queen, pawn, QUEEN_TILE, PAWN_TILE, 
-            TestGameFactory.WHITE_KING_LOC, TestGameFactory.BLACK_KING_LOC);
+        GameManager gm = testGameFactory.CreateNPieceGame(
+            pieces, colors, locations,
+            TestGameFactory.WHITE_KING_LOC,
+            TestGameFactory.BLACK_KING_LOC);
+
         Game game = gm.Game;
         BoardPlane board = game.Board;
 
@@ -57,9 +72,6 @@ public class DestroyUnitTests
         Assert.IsFalse(game.CurrentPlayer.Units.Contains(pawnObj));
         Assert.IsTrue(game.OtherPlayer.Units.Count == 2);
         Assert.IsTrue(game.CurrentPlayer.Units.Count == 1);
-
-        yield return null;
-
     }
 
     [UnityTest]

@@ -1,4 +1,8 @@
-﻿using UnityEngine;
+﻿using NUnit.Framework;
+using System.Collections.Generic;
+using UnityEngine;
+using static log4net.Appender.ColoredConsoleAppender;
+using static UnityEditor.FilePathAttribute;
 
 internal class TestGameFactory
 {
@@ -6,6 +10,101 @@ internal class TestGameFactory
     public const int BLACK_KING_LOC = 60;
     public TestGameFactory() { }
     //TEST GAMES WILL ALWAYS INCLUDE A KING
+
+    
+    //maybe improve this at some point
+    public void BuildFullLists(
+        List<IGamePiece> pieces, 
+        List<Color> colors, 
+        List<int> locations)
+    {
+        int tile = 0;
+        for (int i = 0; i < 2; i++)
+        {
+            Color color;
+            if (i == 1)
+            {
+                color = Color.Black;
+                tile = 48;
+                for (int j = 0; j < 8; j++)
+                {
+                    GameObject pawnObj = new();
+                    Pawn pawn = pawnObj.AddComponent<Pawn>();
+                    tile++;
+                    pawn.FirstMove = false;
+                    pieces.Add(pawn);
+                    colors.Add(color);
+                    locations.Add(tile);
+                }
+            }
+            else
+                color = Color.White;
+
+            GameObject rookObjR = new();
+            Rook rookR = rookObjR.AddComponent<Rook>();
+            tile++;
+            pieces.Add(rookR);
+            colors.Add(color);
+            locations.Add(tile);
+
+            GameObject knightRObj = new();
+            Knight knightR = knightRObj.AddComponent<Knight>();
+            tile++;
+            pieces.Add(knightR);
+            colors.Add(color);
+            locations.Add(tile);
+
+            GameObject bishopRObj = new();
+            Bishop bishopR = bishopRObj.AddComponent<Bishop>();
+            tile++;
+            pieces.Add(bishopR);
+            colors.Add(color);
+            locations.Add(tile);
+
+            GameObject queenObj = new();
+            Queen queen = queenObj.AddComponent<Queen>();
+            tile++;
+            pieces.Add(queen);
+            colors.Add(color);
+            locations.Add(tile);
+
+            //king happens elsewhere
+
+            GameObject bishopLObj = new();
+            Bishop bishopL = bishopLObj.AddComponent<Bishop>();
+            tile += 2;
+            pieces.Add(bishopL);
+            colors.Add(color);
+            locations.Add(tile);
+
+            GameObject knightLObj = new();
+            Knight knight = knightLObj.AddComponent<Knight>();
+            tile++;
+            pieces.Add(knight);
+            colors.Add(color);
+            locations.Add(tile);
+
+            GameObject rookObjL = new();
+            Rook rookL = rookObjL.AddComponent<Rook>();
+            tile++;
+            pieces.Add(rookL);
+            colors.Add(color);
+            locations.Add(tile);
+
+            if (color != Color.White)
+                continue;
+            for (int j = 0; j < 8; j++)
+            {
+                GameObject pawnObj = new();
+                Pawn pawn = pawnObj.AddComponent<Pawn>();
+                tile++;
+                pawn.FirstMove = false;
+                pieces.Add(pawn);
+                colors.Add(color);
+                locations.Add(tile);
+            }
+        }
+    }
 
     public void SetupPiece(IGamePiece piece, int tileNum, BoardPlane board)
     {
@@ -21,16 +120,16 @@ internal class TestGameFactory
         GameObject gmObj = GameObject.FindGameObjectWithTag("Game Manager");
         //Assert.IsNotNull(gmObj, "Couldn't find Game Manager.");
         GameManager gm = gmObj.GetComponent<GameManager>();
-        gm.Initialize(true);
+        //gm.Initialize(true);
         Game game = gm.Game;
         BoardPlane board = gm.Board;
 
         King whiteKing = game.CurrentPlayer.PlayersKing;
         whiteKing.Initialize(board);
-        whiteKing.TestInit(whiteKing.GetColor());
+        whiteKing.TestInit(Color.White);
         King blackKing = game.OtherPlayer.PlayersKing;
         blackKing.Initialize(board);
-        blackKing.TestInit(blackKing.GetColor());
+        blackKing.TestInit(Color.Black);
 
         SetupPiece(whiteKing, whiteKingLoc, board);
         SetupPiece(blackKing, blackKingLoc, board);
@@ -39,7 +138,7 @@ internal class TestGameFactory
     }
 
 
-
+    //remove at some point
     public GameManager CreateSinglePieceGame(IGamePiece piece, Color color, int location, int whiteKingLoc, int blackKingLoc)
     {
         GameManager gm = CreateEmptyGame(whiteKingLoc, blackKingLoc);
@@ -62,32 +161,50 @@ internal class TestGameFactory
 
 
     //MAKE IT SO IT ALSO TAKES PARAM COLOR, SO THAT CAN TEST CASE SUCH AS MOVE(PIECE, FRIENDLY PIECE) BETTER
-    public GameManager CreateTwoPieceGame(IGamePiece pieceA, IGamePiece pieceB, 
-        int locationA, int locationB, int whiteKingLoc, int blackKingLoc)
+    public GameManager CreateNPieceGame(List<IGamePiece> pieces, List<Color> colors, List<int> locations, int whiteKingLoc, int blackKingLoc)
     {
         GameManager gm = CreateEmptyGame(whiteKingLoc, blackKingLoc);
         Game game = gm.Game;
         BoardPlane board = game.Board;
 
+        if (pieces.Count != colors.Count || pieces.Count != locations.Count)
+        {
+            return null;
+        }
+
         // Create pieces
-        pieceA.Initialize(board);
-        pieceA.TestInit(Color.White);
-        pieceB.Initialize(board);
-        pieceB.TestInit(Color.Black);
+        for(int i = 0; i < pieces.Count; i++)
+        {
+            pieces[i].Initialize(board);
+            pieces[i].TestInit(colors[i]);
+
+            // Place piece on square
+            SetupPiece(pieces[i], locations[i], board);
+
+            // Register pieces with players
+            GameObject obj = pieces[i].GetObj();
+            if (colors[i] == game.CurrentPlayer.PlayerColor)
+                game.CurrentPlayer.Units.Add(obj);
+            else
+                game.OtherPlayer.Units.Add(obj);
+            obj.AddComponent<SelectPiece>();
+            if (obj.TryGetComponent<SelectPiece>(out SelectPiece sp))
+            {
+                if (colors[i] == Color.White)
+                    sp.enabled = true;
+                else
+                    sp.enabled = false;
+            }
+        }
+
         King whiteKing = game.CurrentPlayer.PlayersKing;
         whiteKing.Initialize(board);
         whiteKing.TestInit(whiteKing.GetColor());
+        whiteKing.GetObj().AddComponent<SelectPiece>().enabled = true;
         King blackKing = game.OtherPlayer.PlayersKing;
         blackKing.Initialize(board);
         blackKing.TestInit(blackKing.GetColor());
-
-        // Place pieces on square
-        SetupPiece(pieceA, locationA, board);
-        SetupPiece(pieceB, locationB, board);
-
-        // Register pieces with players
-        game.CurrentPlayer.Units.Add(pieceA.GetObj());
-        game.OtherPlayer.Units.Add(pieceB.GetObj());
+        blackKing.GetObj().AddComponent<SelectPiece>().enabled = false;
 
         return gm;
     }

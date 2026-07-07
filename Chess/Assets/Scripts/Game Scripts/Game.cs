@@ -30,26 +30,27 @@ public class Game
     public MoveSim MoveSim { get; }
     public bool TestGame { get; }
 
-
-    public Game(BoardPlane board, bool testGame)
+    //CONSTRUCTOR FOR TESTING
+    public Game(BoardPlane board)
     {
+        this.TestGame = true;
         CurrentState = GameState.Initializing;
         this.Board = board;
         this.Board.Initialize(true);
         MoveSim = new MoveSim();
         Rules = new GameRules(this);
-        this.TestGame = testGame;
         StartGame(Color.White);
     }
 
+    //CONSTRUCTOR FOR LEGAL GAMES
     public Game(BoardPlane board, Color color)
     {
+        this.TestGame = false;
         CurrentState = GameState.Initializing;
         this.Board = board;
         this.Board.Initialize(false);
         MoveSim = new MoveSim();
         Rules = new GameRules(this);
-        this.TestGame = false;
         StartGame(color);
     }
 
@@ -58,7 +59,6 @@ public class Game
         InitGame(color);//move down to line before enable?
         InitializePieces(CurrentPlayer, Board);
         InitializePieces(OtherPlayer, Board);
-        // Ensure only the current player can select pieces at start
         DisableUnits(OtherPlayer);
         EnableUnits(CurrentPlayer);
     }
@@ -87,38 +87,44 @@ public class Game
         {
             if(!player.Units[i].TryGetComponent<IGamePiece>(out IGamePiece piece))
             {
-                //EXCEPTION
+                int ex = ExceptionHandler.COMPONENT_NOT_FOUND_EXCEPTION;
+                ExceptionHandler.PrintException(ex);
+                Debug.Log($"Unit '{player.Units[i].name}' has no IGamePiece component.");
             }
             piece.Initialize(board);
         }
     }
 
-    public void TryMove(GameObject obj, BoardSquare moveToTile)
+    public bool TryMove(GameObject obj, BoardSquare moveToTile)
     {
         //if obj is not one of CurrentPlayer's units and it's not their king, bad obj.
         if (!CurrentPlayer.Units.Contains(obj))
         {
-            return;
+            return false;
         }
-        if (obj.TryGetComponent<IGamePiece>(out IGamePiece piece))
+        if (!obj.TryGetComponent<IGamePiece>(out IGamePiece piece))
         {
-            if (Rules.ValidMove(piece, moveToTile) && piece.ValidateMove(moveToTile))
-            {
-                int tileNum = moveToTile.SquareNumber;
-                if (Board.GetOccupier(tileNum) != null)
-                {
-                    IGamePiece temp = (IGamePiece)Board.GetOccupier(tileNum);
-                    DestroyUnit(temp.GetObj());
-                }
-                Board.MovePiece(piece, tileNum);
-                //should make class for moving visual GameObjects
-                obj.transform.position = moveToTile.transform.position;
-
-                piece.OnMoved();    //Sets first move to false
-
-                ProcessMove();
-            }
+            return false;
         }
+        if (Rules.ValidMove(piece, moveToTile) && piece.ValidateMove(moveToTile))
+        {
+            int tileNum = moveToTile.SquareNumber;
+            if (Board.GetOccupier(tileNum) != null)
+            {
+                IGamePiece temp = (IGamePiece)Board.GetOccupier(tileNum);
+                DestroyUnit(temp.GetObj());
+            }
+
+            Board.MovePiece(piece, tileNum);
+            obj.transform.position = moveToTile.transform.position;
+
+            piece.OnMoved();    //Sets first move to false
+
+            ProcessMove();
+            return true;
+        }
+        else
+            return false;
     }
     
 
@@ -130,6 +136,8 @@ public class Game
         Rules.IsInCheck(CurrentPlayer, OtherPlayer);
         NextGameState();
         NextCurrentPlayer();
+
+        //put this into a function. Also invert first "if" a bit and move calls around
         if ((CurrentState == GameState.WhiteTurn && CurrentPlayer.PlayerColor == Color.White)
             || (CurrentState == GameState.BlackTurn && CurrentPlayer.PlayerColor == Color.Black))
         {
@@ -143,10 +151,13 @@ public class Game
         }
         else
         {
-            Debug.LogError("ERROR! Game state problem!");
+            ExceptionHandler.PrintException(-1);
+            Debug.LogError("ERROR IN ProcessMove()!");
             OnGameOver();
+            ExceptionHandler.ForceQuit();
         }
     }
+
 
     private void NextCurrentPlayer()
     {
@@ -172,7 +183,12 @@ public class Game
             CurrentState = GameState.WhiteTurn;
         }
         else
+        {
+            ExceptionHandler.PrintException(-1);
             Debug.Log("ERROR IN NextGameState()");
+            OnGameOver();
+            ExceptionHandler.ForceQuit();
+        }
     }
 
 
@@ -188,10 +204,10 @@ public class Game
         }
     }
 
-    //RECALCULATE UNIT MOVES/ATTACKS?
+
     private void DestroyUnit(GameObject obj)
     {
-        OtherPlayer.RemoveUnit(obj);//maybe remove unit should return unit
+        OtherPlayer.RemoveUnit(obj);//remove unit should return unit
         IGamePiece piece = obj.GetComponent<IGamePiece>();
         if (OtherPlayer.UnitsCheckingEnemyKing.Contains(piece))
             OtherPlayer.UnitsCheckingEnemyKing.Remove(piece);
@@ -202,39 +218,28 @@ public class Game
     }
 
 
-    //private void ToggleUnits()
-    //{//toggle units enabled based off of current state?
-    //    //Disable current player's SelectPiece component if present.
-    //     for (int i = 0; i < CurrentPlayer.Units.Count; i++)
-    //     {
-    //         GameObject unit = CurrentPlayer.Units[i];
-    //         if (unit == null) continue;
-    //         if (unit.TryGetComponent<SelectPiece>(out SelectPiece sp))
-    //         {
-    //            sp.enabled = !sp.enabled;
-    //            sp.OnDisable();
-    //         }
-    //         else
-    //         {
-    //             Debug.Log($"i = {i}, Unit '{unit.name}' has no SelectPiece component.");
-    //         }
-    //     }
-    //}
     private void DisableUnits(Player player)
     {
         // Disable current player's SelectPiece component if present.
         for (int i = 0; i < player.Units.Count; i++)
         {
             GameObject unit = player.Units[i];
-            if (unit == null) continue;
+            if (unit == null)
+            {
+                Debug.Log($"A null unit reference was found in '{player}' move list.");
+                continue;
+            }
             if (unit.TryGetComponent<SelectPiece>(out SelectPiece sp))
             {
                 sp.enabled = false;
-                sp.OnDisable();
+                sp.Cleanup();
             }
             else
             {
-                Debug.Log($"i = {i}, Unit '{unit.name}' has no SelectPiece component.");
+                int ex = ExceptionHandler.COMPONENT_NOT_FOUND_EXCEPTION;
+                ExceptionHandler.PrintException(ex);
+                Debug.Log($"Unit '{unit.name}' has no SelectPiece component to enable.");
+                continue;
             }
         }
     }
@@ -244,14 +249,23 @@ public class Game
         for (int i = 0; i < player.Units.Count; i++)
         {
             GameObject unit = player.Units[i];
-            if (unit == null) continue;
+            if (unit == null)
+            {
+                Debug.Log($"A null unit reference was found in '{player}' move list.");
+                continue;
+            }
             if (unit.TryGetComponent<SelectPiece>(out SelectPiece sp))
             {
                 sp.enabled = true;
+                sp.Initialize();
             }
             else
             {
-                Debug.Log($"Unit '{unit.name}' has no SelectPiece component to enable.");
+                int ex = ExceptionHandler.COMPONENT_NOT_FOUND_EXCEPTION;
+                ExceptionHandler.PrintException(ex);
+                Debug.Log("Component SelectPiece could not be found! " +
+                    "Some game pieces may be disabled!");
+                continue;
             }
         }
     }
@@ -270,7 +284,7 @@ public class Game
         // Disable selection for both players when the game ends
         DisableUnits(CurrentPlayer);
         DisableUnits(OtherPlayer);
-        Debug.Log("CHECKMATE!\n" + CurrentPlayer.PlayerColor + " Wins!");
+        Debug.Log("CHECKMATE!\n" + OtherPlayer.PlayerColor + " Wins!");
         //Open popup prompt to either exit or restart.
     }
 

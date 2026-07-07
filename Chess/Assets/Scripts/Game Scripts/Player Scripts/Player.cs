@@ -14,11 +14,11 @@ public abstract class Player
 
     internal Player(Color color, bool test)
     {
+        this.Testing = test;
         units = new List<GameObject>();
         UnitsCheckingEnemyKing = new();
         PlayerColor = color;
         check = false;
-        this.Testing = test;
         if (Testing)
             CreateTestKing();
         else
