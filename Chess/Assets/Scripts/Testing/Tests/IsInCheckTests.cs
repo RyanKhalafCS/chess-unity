@@ -8,11 +8,11 @@ using UnityEngine.TestTools;
 public class IsInCheckTests
 {
 
-    private TestGameFactory testGameFactory;
+    private TestGameFactory _testGameFactory;
 
     public IsInCheckTests()
     {
-        this.testGameFactory = new TestGameFactory();
+        _testGameFactory = new TestGameFactory();
     }
 
 
@@ -31,7 +31,7 @@ public class IsInCheckTests
         Color qColor = Color.White;
         const int QUEEN_TILE = 3;
 
-        GameManager gm = testGameFactory.CreateSinglePieceGame(
+        GameManager gm = _testGameFactory.CreateSinglePieceGame(
             queen, qColor,
             QUEEN_TILE,
             TestGameFactory.WHITE_KING_LOC,
@@ -66,7 +66,7 @@ public class IsInCheckTests
         Color qColor = Color.White;
         const int QUEEN_TILE = 44;
 
-        GameManager gm = testGameFactory.CreateSinglePieceGame(
+        GameManager gm = _testGameFactory.CreateSinglePieceGame(
             queen, qColor,
             QUEEN_TILE,
             TestGameFactory.WHITE_KING_LOC,
@@ -117,7 +117,7 @@ public class IsInCheckTests
         colors.Add(pColor);
         locations.Add(PAWN_TILE);
 
-        GameManager gm = testGameFactory.CreateNPieceGame(
+        GameManager gm = _testGameFactory.CreateNPieceGame(
             pieces, colors, locations,
             TestGameFactory.WHITE_KING_LOC,
             TestGameFactory.BLACK_KING_LOC);

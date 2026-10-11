@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /*
  * TODO notes:
@@ -46,11 +47,11 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private BoardPlane board;
-    public BoardPlane Board => board;
+    [FormerlySerializedAs("board")] [SerializeField] private BoardPlane _board;
+    public BoardPlane Board => _board;
     public  Game Game { get; private set; }
-    [SerializeField] private GameObject gamePieces;
-    [SerializeField] private ColorSelectPopup popup;
+    [FormerlySerializedAs("gamePieces")] [SerializeField] private GameObject _gamePieces;
+    [FormerlySerializedAs("popup")] [SerializeField] private ColorSelectPopup _popup;
     public bool Testing { get; private set; }
 
 
@@ -81,7 +82,7 @@ public class GameManager : MonoBehaviour
 
     private void StartGame()
     {
-        popup.Show("Will you be white or black?", OnColorChosen);
+        _popup.Show("Will you be white or black?", OnColorChosen);
     }
 
     //create new game

@@ -7,11 +7,11 @@ using UnityEngine.TestTools;
 public class UnmoveTests
 {
 
-    private TestGameFactory testGameFactory;
+    private TestGameFactory _testGameFactory;
 
     public UnmoveTests()
     {
-        this.testGameFactory = new TestGameFactory();
+        _testGameFactory = new TestGameFactory();
     }
     // A Test behaves as an ordinary method
     [Test]

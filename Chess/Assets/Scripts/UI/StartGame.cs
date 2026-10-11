@@ -1,11 +1,12 @@
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
 public class StartGame : PopupWindowContent
 {
-    bool toggle1 = true;
-    bool toggle2 = true;
-    bool toggle3 = true;
+    private bool _toggle1 = true;
+    private bool _toggle2 = true;
+    private bool _toggle3 = true;
 
     public override Vector2 GetWindowSize()
     {
@@ -15,9 +16,9 @@ public class StartGame : PopupWindowContent
     public override void OnGUI(Rect rect)
     {
         GUILayout.Label("Popup Options Example", EditorStyles.boldLabel);
-        toggle1 = EditorGUILayout.Toggle("Toggle 1", toggle1);
-        toggle2 = EditorGUILayout.Toggle("Toggle 2", toggle2);
-        toggle3 = EditorGUILayout.Toggle("Toggle 3", toggle3);
+        _toggle1 = EditorGUILayout.Toggle("Toggle 1", _toggle1);
+        _toggle2 = EditorGUILayout.Toggle("Toggle 2", _toggle2);
+        _toggle3 = EditorGUILayout.Toggle("Toggle 3", _toggle3);
     }
 
     public override void OnOpen()
@@ -30,3 +31,4 @@ public class StartGame : PopupWindowContent
         Debug.Log("Popup closed: " + this);
     }
 }
+#endif

@@ -8,11 +8,11 @@ using UnityEngine.TestTools;
 public class MoveInCheckTests
 {
 
-    private TestGameFactory testGameFactory;
+    private TestGameFactory _testGameFactory;
 
     public MoveInCheckTests()
     {
-        this.testGameFactory = new TestGameFactory();
+        _testGameFactory = new TestGameFactory();
     }
 
     // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
@@ -60,7 +60,7 @@ public class MoveInCheckTests
         colors.Add(kColor);
         locations.Add(KNIGHT_TILE);
 
-        GameManager gm = testGameFactory.CreateNPieceGame(
+        GameManager gm = _testGameFactory.CreateNPieceGame(
             pieces, colors, locations,
             TestGameFactory.WHITE_KING_LOC, 
             TestGameFactory.BLACK_KING_LOC);
@@ -136,7 +136,7 @@ public class MoveInCheckTests
         colors.Add(kColor);
         locations.Add(KNIGHT_TILE);
 
-        GameManager gm = testGameFactory.CreateNPieceGame(
+        GameManager gm = _testGameFactory.CreateNPieceGame(
             pieces, colors, locations,
             TestGameFactory.WHITE_KING_LOC + 1,
             TestGameFactory.BLACK_KING_LOC);

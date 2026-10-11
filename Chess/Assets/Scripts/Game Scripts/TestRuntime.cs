@@ -1,4 +1,3 @@
-using System;
 
 /// <summary>
 /// Small runtime flag used to switch the GameManager into test mode before

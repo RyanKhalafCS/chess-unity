@@ -3,12 +3,12 @@ using UnityEngine;
 public class PlayerManager
 {
     public Player[] Players { get; private set; }
-    private readonly bool testGame = false;
+    private readonly bool _testGame = false;
 
 
     public PlayerManager(Color color, bool testGame)
     {
-        this.testGame = testGame;
+        _testGame = testGame;
         SetPlayers(color);
     }
 
@@ -17,13 +17,13 @@ public class PlayerManager
         Players = new Player[2];
         if (color == Color.White)
         {
-            Players[0] = new HumanPlayer(color, testGame);
-            Players[1] = new AIPlayer(Color.Black, testGame);
+            Players[0] = new HumanPlayer(color, _testGame);
+            Players[1] = new AIPlayer(Color.Black, _testGame);
         }
         else
         {
-            Players[0] = new AIPlayer(Color.White, testGame);
-            Players[1] = new HumanPlayer(color, testGame);
+            Players[0] = new AIPlayer(Color.White, _testGame);
+            Players[1] = new HumanPlayer(color, _testGame);
         }
     }
 }

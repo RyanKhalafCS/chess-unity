@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class BoardSquare : MonoBehaviour
@@ -10,7 +9,7 @@ public class BoardSquare : MonoBehaviour
     //private BoardSquare right;
 
 
-    void Awake()
+    private void Awake()
     {
         string[] nameParts = gameObject.name.Split(" ");//you either have to assign the id value at object creation or do this, or assign from editor. Dont want to create all objects from scratch.
         int num = int.Parse(nameParts[1]);

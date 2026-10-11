@@ -1,152 +1,55 @@
-using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEngine;
 
-public class Pawn : MonoBehaviour, IGamePiece
+public class Pawn : GamePiece
 {
     public bool FirstMove { get; set; }
-    [SerializeField] private Color Color;
-    [SerializeField] private BoardSquare currentTile;
-    private List<BoardSquare> possibleMoves;
-    private List<BoardSquare> possibleAttacks;
-    private BoardPlane board;
-    private bool initialized = false;
 
-    public void Initialize(BoardPlane board)
+    protected override void OnInitialize()
     {
-        if (initialized)
-            return;
         FirstMove = true;
-        this.board = board;
-        possibleMoves = new List<BoardSquare>();
-        possibleAttacks = new List<BoardSquare>();
-        SetCurrentTile(board.GetTileBeneath(gameObject));
-        initialized = true;
     }
 
-
-
-    public List<BoardSquare> GetPossibleMoves()
-    {
-        return possibleMoves;
-    }
-    public List<BoardSquare> GetPossibleAttacks()
-    {
-        return possibleAttacks;
-    }
-
-    public void SetPossibleMoves()
-    {
-        possibleMoves.Clear();
-        possibleAttacks.Clear();
-
-        GenerateMoves(possibleMoves, possibleAttacks);
-        
-    }
-
-
-    public bool ValidateMove(BoardSquare move)
-    {
-        List<BoardSquare> mList = new();
-        List<BoardSquare> aList = new();
-
-        GenerateMoves(mList, aList);
-        if (mList.Contains(move) || aList.Contains(move))
-        {
-            return true;
-        }
-        return false;
-    }
-
-
-    private void GenerateMoves(List<BoardSquare> moves, List<BoardSquare> attacks)
-    {
-        int colorMultiplier = Movement.GetColorMultiplier(Color);
-
-        //Attack NW
-        int dir = Movement.NEXT_NW * colorMultiplier;
-        int squareNum = currentTile.SquareNumber + dir;
-        CanAttack(moves, attacks, squareNum, dir);
-
-        //Attack NE
-        dir = Movement.NEXT_NE * colorMultiplier;
-        squareNum = currentTile.SquareNumber + dir;
-        CanAttack(moves, attacks, squareNum, dir);
-
-        //SET MOVE TILES
-        dir = Movement.NEXT_N * colorMultiplier;
-        squareNum = currentTile.SquareNumber + dir;
-        CanMoveTo(moves, squareNum, dir);
-    }
-
-    private void CanAttack(List<BoardSquare> moveList,
-                          List<BoardSquare> attackList,
-                          int squareNum,
-                          int dir)
-    {
-        if (BoardPlane.InBounds(squareNum)
-            && !Movement.IsOverEdge(squareNum - dir, dir)
-            && board.CanAttack(Color, squareNum))
-        {
-            BoardSquare tile = board.GetBoardSquare(squareNum);
-            attackList.Add(tile);
-        }
-    }
-
-    private void CanMoveTo(List<BoardSquare> moveList, int squareNum, int dir)
-    {
-
-        if (BoardPlane.InBounds(squareNum) && board.CanMove(squareNum))
-        {
-            BoardSquare tile = board.GetBoardSquare(squareNum);
-            moveList.Add(tile);
-
-            //Check second N tile
-            squareNum += dir;
-            if (BoardPlane.InBounds(squareNum) && FirstMove && board.CanMove(squareNum))//unnecessary inbounds check
-            {
-                tile = board.GetBoardSquare(squareNum);
-                moveList.Add(tile);
-            }
-        }
-    }
-
-
-    public BoardSquare GetCurrentTile()
-    {
-        return currentTile;
-    }
-
-    #nullable enable
-    public void SetCurrentTile(BoardSquare? obj)
-    {
-        currentTile = obj;
-    }
-    public void DisableGamePiece()
-    {
-        gameObject.SetActive(false);
-    }
-
-    public Color GetColor()
-    {
-        return Color;
-    }
-
-    public GameObject GetObj()
-    {
-        return gameObject;
-    }
-
-    public void OnMoved()
+    public override void OnMoved()
     {
         FirstMove = false;
     }
-    public void TestInit(Color color)
+
+    protected override void GenerateMoves(List<BoardSquare> moves, List<BoardSquare> attacks)
     {
-        if (board.Testing)
+        int colorMultiplier = Movement.GetColorMultiplier(PieceColor);
+
+        //Attack NW and NE
+        TryAddAttack(attacks, Movement.NEXT_NW * colorMultiplier);
+        TryAddAttack(attacks, Movement.NEXT_NE * colorMultiplier);
+
+        //Move forward
+        TryAddForwardMoves(moves, Movement.NEXT_N * colorMultiplier);
+    }
+
+    private void TryAddAttack(List<BoardSquare> attacks, int dir)
+    {
+        int squareNum = CurrentTile.SquareNumber + dir;
+        if (BoardPlane.InBounds(squareNum)
+            && !Movement.IsOverEdge(squareNum - dir, dir)
+            && Board.CanAttack(PieceColor, squareNum))
         {
-            this.Color = color;
+            attacks.Add(Board.GetBoardSquare(squareNum));
+        }
+    }
+
+    private void TryAddForwardMoves(List<BoardSquare> moves, int dir)
+    {
+        int squareNum = CurrentTile.SquareNumber + dir;
+        if (!BoardPlane.InBounds(squareNum) || !Board.CanMove(squareNum))
+            return;
+
+        moves.Add(Board.GetBoardSquare(squareNum));
+
+        //Second tile forward on the pawn's first move
+        squareNum += dir;
+        if (BoardPlane.InBounds(squareNum) && FirstMove && Board.CanMove(squareNum))
+        {
+            moves.Add(Board.GetBoardSquare(squareNum));
         }
     }
 }

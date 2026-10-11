@@ -7,11 +7,11 @@ using UnityEngine.TestTools;
 public class DestroyUnitTests
 {
 
-    private TestGameFactory testGameFactory;
+    private TestGameFactory _testGameFactory;
 
     public DestroyUnitTests()
     {
-        this.testGameFactory = new TestGameFactory();
+        _testGameFactory = new TestGameFactory();
     }
 
     [Test]
@@ -52,7 +52,7 @@ public class DestroyUnitTests
         colors.Add(pColor);
         locations.Add(PAWN_TILE);
 
-        GameManager gm = testGameFactory.CreateNPieceGame(
+        GameManager gm = _testGameFactory.CreateNPieceGame(
             pieces, colors, locations,
             TestGameFactory.WHITE_KING_LOC,
             TestGameFactory.BLACK_KING_LOC);

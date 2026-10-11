@@ -3,11 +3,11 @@ using UnityEngine;
 
 public class GameRules
 {
-    private readonly Game game;
+    private readonly Game _game;
 
     public GameRules(Game game)
     {
-        this.game = game;
+        _game = game;
     }
 
 
@@ -19,25 +19,25 @@ public class GameRules
             return false;
         if (move == gPiece.GetCurrentTile())
             return false;
-        IGamePiece occupier = game.Board.GetOccupier(move.SquareNumber);
+        IGamePiece occupier = _game.Board.GetOccupier(move.SquareNumber);
         //Debug.Log("VALIDMOVE 1= " + occupier);
         // Reject a move onto a same-color piece up front. This also keeps MoveSim from
         // simulating a "capture" of a friendly piece (which pollutes the Units rosters).
         if (occupier != null && occupier.GetColor() == gPiece.GetColor())
             return false;
         gPiece.SetPossibleMoves();
-        if (game.MoveSim.MoveInCheck(gPiece, move, game))
+        if (_game.MoveSim.MoveInCheck(gPiece, move, _game))
         {
             Debug.Log("King would be in check. Move must protect king.");
             return false;
         }
-        occupier = game.Board.GetOccupier(move.SquareNumber);
+        occupier = _game.Board.GetOccupier(move.SquareNumber);
         //Debug.Log("VALIDMOVE 2= " + occupier);
         if (gPiece.GetPossibleMoves().Contains(move))
         {
             return true;
         }
-        occupier = game.Board.GetOccupier(move.SquareNumber);
+        occupier = _game.Board.GetOccupier(move.SquareNumber);
         //Debug.Log("VALIDMOVE 3= " + occupier);
         if (gPiece.GetPossibleAttacks().Contains(move) && occupier is not King)
         {
@@ -103,8 +103,8 @@ public class GameRules
     public bool IsCheckmate()
     {
         //_ = game.CurrentPlayer;
-        Debug.Log($"Check status: {game.OtherPlayer.PlayerColor} in check? {game.OtherPlayer.Check}");
-        if (!game.OtherPlayer.Check)
+        Debug.Log($"Check status: {_game.OtherPlayer.PlayerColor} in check? {_game.OtherPlayer.Check}");
+        if (!_game.OtherPlayer.Check)
             return false;
 
         //check if otherPlayer king can escape
@@ -115,14 +115,14 @@ public class GameRules
         }
 
         //If there are multiple UnitsCheckingEnemyKing, then only a move from the king can escape the checkmate.
-        if (game.CurrentPlayer.UnitsCheckingEnemyKing.Count > 1)
+        if (_game.CurrentPlayer.UnitsCheckingEnemyKing.Count > 1)
         {
             Debug.Log("Several units checking enemy king!");
             return true;
         }
 
-        game.UpdateMoveLists();
-        IsInCheck(game.CurrentPlayer, game.OtherPlayer);
+        _game.UpdateMoveLists();
+        IsInCheck(_game.CurrentPlayer, _game.OtherPlayer);
         //check if otherPlayer can destroy unitCheckingEnemyKing
         if (CanDestroyCheckingUnit())
         {
@@ -144,7 +144,7 @@ public class GameRules
     //for each of enemyKing's moves, if theres one that can take them out of check then return true.
     private bool CanKingEscape()
     {
-        King enemyKing = game.OtherPlayer.PlayersKing;
+        King enemyKing = _game.OtherPlayer.PlayersKing;
         List<BoardSquare> toMove = enemyKing.GetPossibleMoves();
         for (int i = 0; i < toMove.Count; i++)
         {
@@ -166,10 +166,10 @@ public class GameRules
     //
     private bool CanDestroyCheckingUnit()
     {
-        BoardSquare tileToAttack = game.CurrentPlayer.UnitsCheckingEnemyKing[0].GetCurrentTile();
-        for (int i = 0; i < game.OtherPlayer.Units.Count; i++)
+        BoardSquare tileToAttack = _game.CurrentPlayer.UnitsCheckingEnemyKing[0].GetCurrentTile();
+        for (int i = 0; i < _game.OtherPlayer.Units.Count; i++)
         {
-            if (!game.OtherPlayer.Units[i].TryGetComponent<IGamePiece>(out IGamePiece enemyGamePiece))
+            if (!_game.OtherPlayer.Units[i].TryGetComponent<IGamePiece>(out IGamePiece enemyGamePiece))
             {
                 continue;
             }
@@ -193,18 +193,18 @@ public class GameRules
         //Queen moves are added to possibleMoves in order N, S, E, W, NW, NE, SW, SE
         //Bishop moves are added in order NW, NE, SW, SE
 
-        for (int i = 0; i < game.CurrentPlayer.UnitsCheckingEnemyKing.Count; i++)
+        for (int i = 0; i < _game.CurrentPlayer.UnitsCheckingEnemyKing.Count; i++)
         {
-            IGamePiece unitCheckingEnemy = game.CurrentPlayer.UnitsCheckingEnemyKing[i];
+            IGamePiece unitCheckingEnemy = _game.CurrentPlayer.UnitsCheckingEnemyKing[i];
             GetPath(paths, unitCheckingEnemy);
         }
         //if OtherPlayer can move a unit into the path of CurrentPlayer.UnitsCheckingEnemyKing, then not checkmate.
-        for (int i = 0; i < game.OtherPlayer.Units.Count; i++)
+        for (int i = 0; i < _game.OtherPlayer.Units.Count; i++)
         {
-            IGamePiece unitDefending = game.OtherPlayer.Units[i].GetComponent<IGamePiece>();
+            IGamePiece unitDefending = _game.OtherPlayer.Units[i].GetComponent<IGamePiece>();
             for (int j = 0; j < paths.Count; j++)
             {
-                BoardSquare tile = game.Board.GetBoardSquare(paths[j]);
+                BoardSquare tile = _game.Board.GetBoardSquare(paths[j]);
                 if (ValidMove(unitDefending, tile))
                 {
                     return true;
@@ -222,7 +222,7 @@ public class GameRules
             return;
 
         int tile = unitAttacking.GetCurrentTile().SquareNumber + dir;
-        int enemyKingTile = game.OtherPlayer.PlayersKing.GetComponent<IGamePiece>().GetCurrentTile().SquareNumber;
+        int enemyKingTile = _game.OtherPlayer.PlayersKing.GetComponent<IGamePiece>().GetCurrentTile().SquareNumber;
         while (tile != enemyKingTile)
         {
             paths.Add(tile);
@@ -234,7 +234,7 @@ public class GameRules
     {
         int tileAttacker = piece.GetCurrentTile().SquareNumber;
         int enemyKingTile =
-            game.OtherPlayer.PlayersKing.GetComponent<IGamePiece>()
+            _game.OtherPlayer.PlayersKing.GetComponent<IGamePiece>()
             .GetCurrentTile().SquareNumber;
 
         int[] directions =
@@ -256,7 +256,7 @@ public class GameRules
             {
                 if (squareNum == enemyKingTile)
                     return dir;
-                else if (game.Board.GetOccupier(squareNum) != null)     //(BoardPlane.GetBoardSquare(squareNum).Occupier != null)
+                else if (_game.Board.GetOccupier(squareNum) != null)     //(BoardPlane.GetBoardSquare(squareNum).Occupier != null)
                     break;
                 squareNum += dir;
             }
@@ -264,69 +264,4 @@ public class GameRules
         return ExceptionHandler.SEVERE_EXCEPTION;
     }
 
-
-
-    
-
-
-
-
-
-    /*
-     * private readonly ChessGame game;
-
-    public ChessRules(ChessGame game);
-
-    public bool IsCheck();
-
-    public bool IsCheckmate();
-
-    public bool IsStalemate();
-
-    public bool CanKingEscape();
-
-    public bool CanDestroyCheckingUnit();
-
-    public bool CanPathBlock();
-
-    public bool IsLegalMove(
-        IGamePiece piece,
-        BoardSquare destination);
-
-    public bool MoveLeavesKingInCheck(
-        IGamePiece piece,
-        BoardSquare destination);
-
-    public bool IsKingInCheck(
-        Player defendingPlayer);
-
-    public List<BoardSquare> GetThreatenedSquares(
-        Player attackingPlayer);
-
-    public List<IGamePiece> GetCheckingPieces(
-        Player attackingPlayer,
-        Player defendingPlayer);
-
-    public bool HasAnyLegalMove(
-        Player player);
-
-    public bool IsSquareUnderAttack(
-        BoardSquare square,
-        Player attackingPlayer);
-
-    public bool CanCastle(
-        IGamePiece king,
-        IGamePiece rook);
-
-    public bool CanEnPassant(
-        IGamePiece pawn,
-        BoardSquare targetSquare);
-
-    public bool CanPromote(
-        IGamePiece pawn);
-
-    public void PromotePawn(
-        IGamePiece pawn,
-        PieceType promotionType);
-     */
 }

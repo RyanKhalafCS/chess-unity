@@ -1,5 +1,3 @@
-using NUnit.Framework;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 public class Game
 {
@@ -7,17 +5,15 @@ public class Game
     {
         Initializing,
         WhiteTurn,
-        BlackTurn,//add PostTurn? YES. PostTurn should be the only time that game can be truly modified.
+        BlackTurn,//add PostTurn?
         //Special game states
         Check,
         Checkmate,
-        Paused,
         Stalemate,
         //End game states
         Draw,
         Resigned,
-        GameOver,
-        AwaitingRematch
+        GameOver
     }
 
     public GameState CurrentState { get; private set; }
@@ -90,6 +86,7 @@ public class Game
                 int ex = ExceptionHandler.COMPONENT_NOT_FOUND_EXCEPTION;
                 ExceptionHandler.PrintException(ex);
                 Debug.Log($"Unit '{player.Units[i].name}' has no IGamePiece component.");
+                continue;
             }
             piece.Initialize(board);
         }
@@ -236,6 +233,9 @@ public class Game
             }
             else
             {
+                //Test games build their units without SelectPiece, so a missing one is expected.
+                if (TestGame)
+                    continue;
                 int ex = ExceptionHandler.COMPONENT_NOT_FOUND_EXCEPTION;
                 ExceptionHandler.PrintException(ex);
                 Debug.Log($"Unit '{unit.name}' has no SelectPiece component to enable.");
@@ -261,6 +261,8 @@ public class Game
             }
             else
             {
+                if (TestGame)
+                    continue;
                 int ex = ExceptionHandler.COMPONENT_NOT_FOUND_EXCEPTION;
                 ExceptionHandler.PrintException(ex);
                 Debug.Log("Component SelectPiece could not be found! " +
@@ -275,7 +277,7 @@ public class Game
     {
         if (CurrentState == GameState.WhiteTurn || CurrentState == GameState.BlackTurn)
         {
-            //CurrentState = GameState.Check;  // Notify that the King is in check
+            //CurrentState = GameState.Check;
         }
     }
 
@@ -290,35 +292,17 @@ public class Game
 
     private void OnStalemate()
     {
-        CurrentState = GameState.Stalemate;  // End the game with a draw due to stalemate
+        CurrentState = GameState.Stalemate;
     }
 
     private void OnDraw()
     {
-        CurrentState = GameState.Draw;  // End the game with a draw
-    }
-
-    private void PauseGame()
-    {
-        CurrentState = GameState.Paused;  // Pause the game
-    }
-
-    private void ResumeGame()
-    {
-        if (CurrentState == GameState.Paused)
-        {
-            CurrentState = GameState.WhiteTurn;  // Resume from White's turn
-        }
+        CurrentState = GameState.Draw;
     }
 
     private void OnResign()
     {
-        CurrentState = GameState.Resigned;  // Player has resigned
-    }
-
-    private void OnRematch()
-    {
-        CurrentState = GameState.AwaitingRematch;  // Waiting for players to agree to rematch
+        CurrentState = GameState.Resigned;
     }
 
     private void OnGameOver()

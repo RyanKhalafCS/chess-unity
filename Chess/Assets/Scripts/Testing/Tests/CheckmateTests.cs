@@ -8,11 +8,11 @@ using UnityEngine.TestTools;
 public class CheckmateTests
 {
 
-    private TestGameFactory testGameFactory;
+    private TestGameFactory _testGameFactory;
 
     public CheckmateTests()
     {
-        this.testGameFactory = new TestGameFactory();
+        _testGameFactory = new TestGameFactory();
     }
 
     [UnityTest]
@@ -30,7 +30,7 @@ public class CheckmateTests
         Color qColor = Color.White;
         const int QUEEN_TILE = 52;
 
-        GameManager gm = testGameFactory.CreateSinglePieceGame(
+        GameManager gm = _testGameFactory.CreateSinglePieceGame(
             queen, qColor,
             QUEEN_TILE,
             TestGameFactory.WHITE_KING_LOC,
@@ -90,7 +90,7 @@ public class CheckmateTests
         colors.Add(kColor);
         locations.Add(KNIGHT_TILE);
 
-        GameManager gm = testGameFactory.CreateNPieceGame(
+        GameManager gm = _testGameFactory.CreateNPieceGame(
             pieces, colors, locations, 
             TestGameFactory.WHITE_KING_LOC, 57);
 
@@ -127,7 +127,7 @@ public class CheckmateTests
         Color qColor = Color.White;
         const int QUEEN_TILE = 52;
 
-        GameManager gm = testGameFactory.CreateSinglePieceGame(
+        GameManager gm = _testGameFactory.CreateSinglePieceGame(
             queen, qColor,
             QUEEN_TILE,
             TestGameFactory.WHITE_KING_LOC,
@@ -180,7 +180,7 @@ public class CheckmateTests
         colors.Add(pColor);
         locations.Add(PAWN_TILE);
 
-        GameManager gm = testGameFactory.CreateNPieceGame(
+        GameManager gm = _testGameFactory.CreateNPieceGame(
             pieces, colors, locations,
             TestGameFactory.WHITE_KING_LOC, 
             TestGameFactory.BLACK_KING_LOC);
@@ -231,7 +231,7 @@ public class CheckmateTests
         colors.Add(pColor);
         locations.Add(PAWN_TILE);
 
-        GameManager gm = testGameFactory.CreateNPieceGame(
+        GameManager gm = _testGameFactory.CreateNPieceGame(
             pieces, colors, locations,
             TestGameFactory.WHITE_KING_LOC,
             TestGameFactory.BLACK_KING_LOC);

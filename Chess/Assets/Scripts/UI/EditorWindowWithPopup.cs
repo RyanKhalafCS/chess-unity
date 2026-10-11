@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
@@ -18,8 +19,8 @@ public class EditorWindowWithPopup : EditorWindow
         window.Show();
     }
 
-    Rect buttonRect;
-    void OnGUI()
+    private Rect _buttonRect;
+    private void OnGUI()
     {
         {
             GUILayout.Label("Go first, second, or AI vs AI?", EditorStyles.boldLabel);
@@ -42,7 +43,8 @@ public class EditorWindowWithPopup : EditorWindow
                 Debug.Log("AI vs AI GAME");
             }
             if (Event.current.type == EventType.Repaint)
-                buttonRect = GUILayoutUtility.GetLastRect();
+                _buttonRect = GUILayoutUtility.GetLastRect();
         }
     }
 }
+#endif

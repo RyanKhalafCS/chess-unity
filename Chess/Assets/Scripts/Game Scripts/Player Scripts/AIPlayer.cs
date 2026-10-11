@@ -1,26 +1,12 @@
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Data;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class AIPlayer : Player
 {
-    ////Player.Color Color;
-    //Dictionary<AIMove, int> Moves;//Contains the best Use the highest MR move of them all. MAKE A TYPE CALLED Move WITH <myGampiece, int location, int MoveRank>
-    ////int MoveRank;
-    //const int pawnKill = 15;
-    //const int backLineKill = 50;
-    //const int queenKill = 80;
-    //const int kingCheck = 70;
-    //const int checkmateThreshold = 200;
 
     public AIPlayer(Color color, bool testing) : base(color, testing)
     {
-        //MoveRank = 0;
-        //Moves = new();
     }
-
 
     public void MakeMove()
     {
@@ -42,17 +28,9 @@ public class AIPlayer : Player
             >
         */
 
-        //whats a good way? go through each of my units and 
-        //for(int i = 0; i < PlayerManager.Players[1].Units.Count; i++)
-        //{
-        //    IGamePiece currentPiece = PlayerManager.Players[1].Units[i].GetComponent<IGamePiece>();
-        //    //Moves.Add(RecursiveFind(currentPiece), MoveRank);
-        //    MoveRank = 0;
-        //}
     }
 
-    //GetBestMove 
-    BoardSquare GetBestMove()
+    private BoardSquare GetBestMove()
     {
         
 
@@ -60,8 +38,7 @@ public class AIPlayer : Player
         return null;
     }
 
-    //
-    AIMove RecursiveFind(IGamePiece obj, List<AIMove> list)
+    private AIMove RecursiveFind(IGamePiece obj, List<AIMove> list)
     {
 
         return null;
@@ -70,11 +47,4 @@ public class AIPlayer : Player
 }
 public class AIMove
 {
-    //IGamePiece Piece;
-    //int Loc;//squareNumber
-    //public AIMove(IGamePiece _piece, int _loc)
-    //{
-    //    this.Piece = _piece;
-    //    this.Loc = _loc;
-    //}
 }

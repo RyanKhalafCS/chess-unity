@@ -1,8 +1,6 @@
 ﻿using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEngine;
-using static log4net.Appender.ColoredConsoleAppender;
-using static UnityEditor.FilePathAttribute;
 
 internal class TestGameFactory
 {

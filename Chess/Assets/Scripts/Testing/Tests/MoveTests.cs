@@ -7,11 +7,11 @@ using UnityEngine.TestTools;
 public class MoveTests
 {
 
-    private TestGameFactory testGameFactory;
+    private TestGameFactory _testGameFactory;
 
     public MoveTests()
     {
-        this.testGameFactory = new TestGameFactory();
+        _testGameFactory = new TestGameFactory();
     }
 
 
@@ -30,7 +30,7 @@ public class MoveTests
         Queen queen = queenObj.AddComponent<Queen>();
         const int QUEEN_TILE = 5;
 
-        GameManager gm = testGameFactory.CreateSinglePieceGame(
+        GameManager gm = _testGameFactory.CreateSinglePieceGame(
             queen, Color.White, QUEEN_TILE,
             TestGameFactory.WHITE_KING_LOC, TestGameFactory.BLACK_KING_LOC);
         Game game = gm.Game;

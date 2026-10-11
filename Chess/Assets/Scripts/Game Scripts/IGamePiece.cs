@@ -1,9 +1,9 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public interface IGamePiece
 {
+    int Id { get; }
     void Initialize(BoardPlane board);
     Color GetColor();
     void SetPossibleMoves();

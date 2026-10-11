@@ -4,56 +4,51 @@ using System.Collections.Generic;
 
 public class SelectPiece : MonoBehaviour
 {
-    private Material newMaterial;
-    private Material originalMaterial;
+    private Material _newMaterial;
+    private Material _originalMaterial;
     private const string ORIGINAL_MATERIAL = "Materials/Clear";
     private const string HIGHLIGHT = "Materials/Highlight";
     private const string ATTACK_HIGHLIGHT = "Materials/AttackHighlight";
     private Vector3 _startPos;
     private Vector3 _currentPos;
     private bool _moving;
-    private List<BoardSquare> highlightedTiles;
-    private GameManager gm;//use scriptable obj i think
-    //private GameRules rules;
-    //private BoardPlane board;
-    private bool initialized = false;
-    private bool processingMove = false;
-    //[SerializeField] private bool componentExists;
+    private List<BoardSquare> _highlightedTiles;
+    private GameManager _gameManager;
+    private bool _initialized = false;
+    private bool _processingMove = false;
 
 
     private void Awake()
     {
-        //hasSelected = false;
-        //componentExists = true;
-        originalMaterial = Resources.Load(ORIGINAL_MATERIAL) as Material;
-        newMaterial = Resources.Load(HIGHLIGHT) as Material;
+        _originalMaterial = Resources.Load(ORIGINAL_MATERIAL) as Material;
+        _newMaterial = Resources.Load(HIGHLIGHT) as Material;
         _startPos = transform.position;
         _currentPos = transform.position;
         _moving = false;
-        highlightedTiles = new List<BoardSquare>();
+        _highlightedTiles = new List<BoardSquare>();
     }
 
     public void Initialize()
     {
-        if (initialized)
+        if (_initialized)
         {
             return;
         }
-        GameObject gmObj = GameObject.FindGameObjectWithTag("Game Manager");
-        if (gmObj == null)
+        GameObject gameManagerObj = GameObject.FindGameObjectWithTag("Game Manager");
+        if (gameManagerObj == null)
         {
             ExceptionHandler.PrintException(ExceptionHandler.GAMEOBJECT_NOT_FOUND_EXCEPTION);
             ExceptionHandler.ForceQuit();
             return;
         }
-        if(!gmObj.TryGetComponent<GameManager>(out GameManager gm))
+        if(!gameManagerObj.TryGetComponent<GameManager>(out GameManager gameManager))
         {
             ExceptionHandler.PrintException(ExceptionHandler.COMPONENT_NOT_FOUND_EXCEPTION);
             ExceptionHandler.ForceQuit();
             return;
         }
-        this.gm = gm;//manager;
-        initialized = true;
+        _gameManager = gameManager;
+        _initialized = true;
     }
 
     private void OnMouseDown()
@@ -65,14 +60,14 @@ public class SelectPiece : MonoBehaviour
             return;
         }
 
-        piece.SetPossibleMoves();//too reduntant here? maybe move into an "if" statement?
-        if (highlightedTiles.Count > 0)
+        piece.SetPossibleMoves();
+        if (_highlightedTiles.Count > 0)
         {
             UnhighlightTiles();
         }
-        newMaterial = Resources.Load(HIGHLIGHT) as Material;
+        _newMaterial = Resources.Load(HIGHLIGHT) as Material;
         HighlightTiles(piece.GetPossibleMoves());
-        newMaterial = Resources.Load(ATTACK_HIGHLIGHT) as Material;
+        _newMaterial = Resources.Load(ATTACK_HIGHLIGHT) as Material;
         HighlightTiles(piece.GetPossibleAttacks());
     }
 
@@ -103,12 +98,9 @@ public class SelectPiece : MonoBehaviour
     {
         if (!enabled)// || !componentExists)
         { return; }
-        //if (processingMove)
-        //    return;
-        //processingMove = true;
 
-        BoardSquare moveToTile = gm.Board.GetTileBeneath(gameObject);
-        GameRules rules = gm?.Game?.Rules;
+        BoardSquare moveToTile = _gameManager.Board.GetTileBeneath(gameObject);
+        GameRules rules = _gameManager?.Game?.Rules;
         if (rules == null)//fix later
             return;
         
@@ -122,7 +114,7 @@ public class SelectPiece : MonoBehaviour
             {
                 Movement.KingRookSwap(GetComponent<IGamePiece>());
             }*/
-            gm.RequestMove(gameObject, moveToTile);
+            _gameManager.RequestMove(gameObject, moveToTile);
         }
         else
         {//return to original pos
@@ -134,6 +126,8 @@ public class SelectPiece : MonoBehaviour
 
     private void ReturnPos(IGamePiece piece)
     {
+        if (piece == null)
+            return;
         transform.position = piece.GetCurrentTile().transform.position;
     }
 
@@ -153,8 +147,8 @@ public class SelectPiece : MonoBehaviour
         for(int i = 0; i < tiles.Count; i++)
         {
             Renderer renderer = tiles[i].GetComponent<Renderer>();
-            if(renderer != null && newMaterial != null)
-                renderer.material = newMaterial;
+            if(renderer != null && _newMaterial != null)
+                renderer.material = _newMaterial;
             else
             {
                 Debug.Log("Highlight failed.");
@@ -162,22 +156,22 @@ public class SelectPiece : MonoBehaviour
         }
         foreach (BoardSquare item in tiles)
         {
-            highlightedTiles.Add(item);
+            _highlightedTiles.Add(item);
         }
     }
 
     private void UnhighlightTiles()
     {
-        for(int i = 0; i < highlightedTiles.Count; i++)
+        for(int i = 0; i < _highlightedTiles.Count; i++)
         {
-            Renderer renderer = highlightedTiles[i].GetComponent<Renderer>();
-            if(renderer != null && originalMaterial != null)
-                renderer.material = originalMaterial;
+            Renderer renderer = _highlightedTiles[i].GetComponent<Renderer>();
+            if(renderer != null && _originalMaterial != null)
+                renderer.material = _originalMaterial;
             else
             {
                 Debug.Log("Highlight failed.");
             }
         }
-        highlightedTiles.Clear();
+        _highlightedTiles.Clear();
     }
 }

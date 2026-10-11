@@ -34,7 +34,7 @@ public class MoveSim
         bool badMove = false;
         //Debug.Log("occ 1 = " + move + ", " + game.Board.GetOccupier(move.SquareNumber));
         //freeing up move location
-        IGamePiece ActualOccupier = game.Board.PrepareMove(moveSquare);
+        IGamePiece actualOccupier = game.Board.PrepareMove(moveSquare);
         //Debug.Log("occ 2 = " + move + ", " + game.Board.GetOccupier(move.SquareNumber));
 
         BoardSquare newPieceActualTile = newPiece.GetCurrentTile();
@@ -56,8 +56,8 @@ public class MoveSim
             enemyPiece.SetPossibleMoves();
         }
 
-        bool removedEnemyUnit = ActualOccupier != null
-            && notMovingPlayer.Units.Remove(ActualOccupier.GetObj());
+        bool removedEnemyUnit = actualOccupier != null
+            && notMovingPlayer.Units.Remove(actualOccupier.GetObj());
         bool movingCheckBefore = movingPlayer.Check;
         List<IGamePiece> checkersBefore = new(notMovingPlayer.UnitsCheckingEnemyKing);
 
@@ -69,12 +69,12 @@ public class MoveSim
 
         //Debug.Log("np = " + newPiece + ", " + newPieceActualTile.SquareNumber + "\nActual occ = " + ActualOccupier + ", " + moveSquare);
         //undo move
-        game.Board.UnmovePiece(newPiece, newPieceActualTile.SquareNumber, ActualOccupier, moveSquare);
+        game.Board.UnmovePiece(newPiece, newPieceActualTile.SquareNumber, actualOccupier, moveSquare);
 
         //Debug.Log("np = " + newPiece + ", " + newPieceActualTile.SquareNumber + "\nActual occ = " + ActualOccupier + ", " + moveSquare);
         //Debug.Log("occ 4 = " + move + ", " + game.Board.GetOccupier(move.SquareNumber));
         if (removedEnemyUnit)//only re-add if it was genuinely removed from notMovingPlayer above
-            notMovingPlayer.Units.Add(ActualOccupier.GetObj());
+            notMovingPlayer.Units.Add(actualOccupier.GetObj());
         //reset unit's moves//USE FUNCTION
         game.UpdateMoveLists();
 

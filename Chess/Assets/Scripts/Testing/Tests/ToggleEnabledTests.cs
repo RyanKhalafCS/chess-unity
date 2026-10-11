@@ -8,11 +8,11 @@ using UnityEngine.TestTools;
 public class ToggleEnabledTests
 {
 
-    private TestGameFactory testGameFactory;
+    private TestGameFactory _testGameFactory;
 
     public ToggleEnabledTests()
     {
-        this.testGameFactory = new TestGameFactory();
+        _testGameFactory = new TestGameFactory();
     }
 
     [UnityTest]
@@ -44,9 +44,9 @@ public class ToggleEnabledTests
         List<int> moves = new();
         const int TURNS = 50;
 
-        testGameFactory.BuildFullLists(pieces, colors, locations);
+        _testGameFactory.BuildFullLists(pieces, colors, locations);
 
-        GameManager gm = testGameFactory.CreateNPieceGame(
+        GameManager gm = _testGameFactory.CreateNPieceGame(
             pieces, colors, locations,
             17,
             48);

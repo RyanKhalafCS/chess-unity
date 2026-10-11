@@ -6,19 +6,19 @@ public abstract class Player
     public readonly Color PlayerColor;
     public King PlayersKing { get; private set; }
     public List<IGamePiece> UnitsCheckingEnemyKing { get;  set; }
-    public List<GameObject> Units => units;
-    private List<GameObject> units;
-    public bool Check => check;
-    private bool check;
+    public List<GameObject> Units => _units;
+    private List<GameObject> _units;
+    public bool Check => _check;
+    private bool _check;
     public bool Testing { get; private set; }
 
     internal Player(Color color, bool test)
     {
         this.Testing = test;
-        units = new List<GameObject>();
+        _units = new List<GameObject>();
         UnitsCheckingEnemyKing = new();
         PlayerColor = color;
-        check = false;
+        _check = false;
         if (Testing)
             CreateTestKing();
         else
@@ -27,7 +27,7 @@ public abstract class Player
 
     internal void SetInCheck(bool value)
     {
-        check = value;
+        _check = value;
     }
 
 
@@ -46,8 +46,8 @@ public abstract class Player
                 || gPiece is Queen
                 || gPiece is King)
             {
-                if(units.Contains(unit))
-                    units.Remove(unit);
+                if(_units.Contains(unit))
+                    _units.Remove(unit);
             }
         }
     }
@@ -91,7 +91,7 @@ public abstract class Player
             {
                 PlayersKing = (King)king;
             }
-            units.Add(colorArr[i]);
+            _units.Add(colorArr[i]);
         }
         return true;
     }
@@ -110,7 +110,7 @@ public abstract class Player
         GameObject kingObj = new(kingName);
         King king = kingObj.AddComponent<King>();
         PlayersKing = king;
-        units.Add(kingObj);
+        _units.Add(kingObj);
     }
 
 }
